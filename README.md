@@ -11,7 +11,8 @@
 - [專案結構](#專案結構)
 - [規範文件](#規範文件)
 - [輸出格式](#輸出格式)
-- [安裝 Mermaid Preview 插件](#安裝-mermaid-preview-插件)
+- [常用指令](#常用指令)
+- [安裝 Markdown Preview 插件](#安裝-markdown-preview-插件)
 
 ---
 
@@ -234,7 +235,12 @@ sequenceDiagram
     - 依照 alt / opt / loop 推導所有測試案例
     - 包含 Basic、Branch、Optional、Loop、Error、Recover、Edge Case
 
-12. **12. Risks & Questions** ⚠️ Optional
+12. **12. Ticket 生成與估時** ⚠️ Optional
+    - 根據 TDD 文件自動生成開發 Ticket
+    - 根據模組類型和複雜度進行開發時間估算
+    - 使用 Story Point 和工程師等級轉換為實際工時
+
+13. **13. Risks & Questions** ⚠️ Optional
     - 未定義的需求
     - 不確定的 Backend 行為
     - 時序 / 效能 / TTL / retry policy 的風險
@@ -441,11 +447,16 @@ MermaidToTDD/
 
 ### 文件組織
 
-生成的 TDD 文件按以下結構組織：
+生成的 TDD 文件按以下結構組織。**詳細規則請參考《TDD Domain, API, Test & TDD Structure》第 5.13 節「輸出文件存放規則」。**
+
+#### 完整輸出結構
 
 ```
 output/
-└── [FeatureName]/
+└── {Feature組合名稱}/              # 根據 @feature 標籤命名
+    ├── 00_Overview/
+    │   ├── README.md
+    │   └── 01_overview.md
     ├── 01_Integrated Service-Level Sequence Diagram/
     │   ├── README.md
     │   └── 01_full_integration_flow.md
@@ -459,11 +470,86 @@ output/
     │   ├── README.md
     │   ├── 01_domain_model.md
     │   └── 02_domain_model_uml_standard.md
-    └── [FeatureName]/
-        └── Module Sequence Diagrams/
-            ├── README.md
-            └── [編號]_[類型]_[名稱].md
+    ├── 05. Module Sequence Diagram（模組序列圖）/
+    │   ├── {Feature1}/              # 若有多個 Feature，按 Feature 分組
+    │   │   └── Module Sequence Diagrams/
+    │   │       ├── README.md
+    │   │       ├── 01_data_initialization_*.md
+    │   │       ├── 02_data_interaction_*.md
+    │   │       └── 03_structural_navigation_*.md
+    │   └── {Feature2}/
+    │       └── Module Sequence Diagrams/
+    │           ├── README.md
+    │           └── ...
+    ├── 06_Feature State & Action (TCA)/        # Optional
+    │   ├── README.md
+    │   └── 01_feature_state_action.md
+    └── 07_UseCase Input & Output Model/        # Optional
+        ├── README.md
+        └── 01_usecase_input_output.md
 ```
+
+### 輸出文件存放規則
+
+#### Feature 組合命名規則
+
+| 情況 | 命名規則 | 範例 |
+|------|---------|------|
+| **單一 Feature** | 直接使用 Feature 名稱 | `PrematchComment` |
+| **多個 Feature** | 使用 `&` 連接 | `LiveChat&PrematchComment` |
+| **無 @feature 標籤** | 使用預設名稱 | `Feature1`, `Feature2` |
+
+#### 章節資料夾命名規則
+
+- **必需章節**：使用 `{兩位數字}_{章節名稱}` 格式
+  - `00_Overview`
+  - `01_Integrated Service-Level Sequence Diagram`
+  - `02_Architecture`
+  - `03_Module Responsibility`
+  - `04_Domain Model`
+  - `05. Module Sequence Diagram（模組序列圖）`
+
+- **可選章節**：使用 `{兩位數字}_{章節名稱}` 格式
+  - `06_Feature State & Action (TCA)`
+  - `07_UseCase Input & Output Model`
+  - `08_API Spec & Mapping`
+  - `09_Error Handling`
+  - `10_Test Scenarios`
+  - `11_Risks & Questions`
+
+#### 章節資料夾內容結構
+
+每個章節資料夾必須包含：
+
+1. **README.md**（統整文件）
+   - 說明該章節的目的
+   - 列出該章節下的所有文件
+
+2. **具體內容文件**（.md 文件）
+   - 命名格式：`{序號}_{描述}.md`
+   - 序號：01, 02, 03...（兩位數字）
+   - 描述：簡短描述（使用英文或中文）
+
+#### Module Sequence Diagram 特殊結構
+
+- **單一 Feature**：直接在 `05. Module Sequence Diagram（模組序列圖）/` 下建立 `Module Sequence Diagrams/` 資料夾
+- **多個 Feature**：為每個 Feature 建立獨立資料夾，每個資料夾下再建立 `Module Sequence Diagrams/` 資料夾
+
+**序列圖文件命名規則**：
+- 格式：`{序號}_{類型}_{描述}.md`
+- 序號：01, 02, 03...（兩位數字）
+- 類型：
+  - `data_initialization_refresh` - 資料初始化/刷新
+  - `data_interaction` - 資料互動（會變動資料或打 API）
+  - `structural_navigation` - 結構導航（會觸發其他 Feature）
+- 描述：簡短描述（使用英文）
+
+**範例**：
+- `01_data_initialization_refresh.md`
+- `02_data_interaction_load_replies.md`
+- `03_data_interaction_toggle_like.md`
+- `04_data_interaction_publish_comment.md`
+- `05_structural_navigation_profile.md`
 
 ### 表格格式規範
 
@@ -475,7 +561,219 @@ output/
 
 ---
 
-## 安裝 Mermaid Preview 插件
+## 常用指令
+
+本專案提供以下常用指令，方便使用者快速操作。**如果使用者詢問「這個專案有什麼指令可以用」，請從本節輸出相關指令。**
+
+### 初始化指令
+
+#### 1. 安裝 Markdown Preview 插件
+
+**指令**：
+```
+請幫我安裝 Mermaid Preview 插件到 Cursor IDE，讓 Markdown Preview 可以渲染 Mermaid 圖表。請執行以下步驟：
+
+1. 先找到 Cursor 的可執行文件路徑：
+   which cursor
+
+2. 使用找到的路徑安裝 Markdown Preview Mermaid Support 插件（推薦）：
+   cursor --install-extension bierner.markdown-mermaid
+
+3. 安裝完成後，請驗證插件是否已安裝：
+   cursor --list-extensions | grep mermaid
+
+4. 驗證 Mermaid 預覽功能：
+   - 打開任何包含 Mermaid 代碼的 .md 文件
+   - 使用 Cmd+Shift+V (macOS) 或 Ctrl+Shift+V (Windows/Linux) 打開預覽
+   - 確認 Mermaid 圖表可以正常渲染
+```
+
+**說明**：安裝 Mermaid 支援插件，讓 Cursor 的 Markdown Preview 可以渲染 Mermaid 圖表。
+
+---
+
+### 生成 TDD 文件指令
+
+#### 2. 生成完整的 TDD 文件
+
+**指令**：
+```
+請根據我提供的 Mermaid Sequence Diagram，按照 tdd_main_prompt.md 中的規範，生成完整的 TDD 文件。
+
+請包含以下章節：
+1. Overview（概述）
+2. Integrated Service-Level Sequence Diagram (ISSD)
+3. Architecture（架構）
+4. Module Responsibility（模組職責）
+5. Domain Model（領域模型）
+6. Module Sequence Diagram（模組序列圖）
+
+可選章節：
+7. Feature State & Action (TCA)
+8. UseCase Input & Output Model
+9. API Spec & Mapping
+10. Error Handling
+11. Test Scenarios
+12. Risks & Questions
+
+請將輸出文件放在 output/[FeatureName]/ 資料夾下。
+```
+
+**說明**：根據 Mermaid 流程圖生成完整的 TDD 文件。
+
+---
+
+#### 3. 生成特定章節
+
+**指令範例 - 生成 Domain Model**：
+```
+請根據現有的 Mermaid Sequence Diagram，生成 Domain Model 章節，包含：
+- 所有 Entity 和 Value Object 的定義
+- Domain Model 關係圖（語意化 + 標準 UML）
+- DTO → Domain Model Mapping 規則
+
+請使用表格格式呈現，並將輸出放在 output/[FeatureName]/04_Domain Model/ 資料夾下。
+```
+
+**指令範例 - 生成 Module Sequence Diagram**：
+```
+請根據 Mermaid Sequence Diagram，生成 Module Sequence Diagram，包含：
+- Data Initialization / Refresh 流程
+- Data Interaction 流程
+- Structural Navigation 流程
+
+請確保符合以下規範：
+- User actor 獨立於所有 box 之外
+- Data Infrastructure Layer 中，同一組的 Repository、Client、API 必須相鄰排列
+- 使用正確的 Layer box 顏色
+
+請將輸出放在 output/[FeatureName]/[FeatureName]/Module Sequence Diagrams/ 資料夾下。
+```
+
+---
+
+### 檢查與驗證指令
+
+#### 4. 檢查 Mermaid 流程圖覆蓋率
+
+**指令**：
+```
+請檢查我提供的 Mermaid Sequence Diagram 是否已經全部轉換為 Module Sequence Diagram。
+
+請比對：
+1. 原始 Mermaid 流程圖中的所有流程
+2. 已生成的 Module Sequence Diagram
+
+列出尚未轉換的流程。
+```
+
+**說明**：檢查是否所有流程都已轉換為 Module Sequence Diagram。
+
+---
+
+#### 5. 驗證 Domain Model 定義
+
+**指令**：
+```
+請檢查 Domain Model 定義是否符合規範：
+1. Entity 是否有唯一識別碼（id）
+2. Value Object 是否完全不可變
+3. 是否正確區分 Entity 和 Value Object
+4. 表格格式是否使用 number list
+
+請列出不符合規範的項目。
+```
+
+**說明**：驗證 Domain Model 定義是否符合規範。
+
+---
+
+### 更新與維護指令
+
+#### 6. 更新表格格式
+
+**指令**：
+```
+請將所有表格中的分行內容改為 number list 格式。
+
+例如：
+- 錯誤：• `id: String`<br>• `content: String`
+- 正確：1. `id: String`<br>2. `content: String`
+```
+
+**說明**：將表格中的 bullet point 改為 number list 格式。
+
+---
+
+#### 7. 重新生成特定章節
+
+**指令範例**：
+```
+請重新生成 Module Responsibility 章節，使用表格格式呈現。
+
+請包含：
+- Feature Modules 表格
+- UseCase Modules 表格
+- Repository Modules 表格
+- Client Modules 表格
+- API Modules 表格
+- Shared Modules 表格
+
+所有表格中的分行內容請使用 number list 格式。
+```
+
+**說明**：重新生成特定章節，確保符合最新規範。
+
+---
+
+### 快速查詢指令
+
+#### 8. 查詢專案結構
+
+**指令**：
+```
+請告訴我這個專案的結構：
+1. 有哪些規範文件？
+2. 輸出文件應該放在哪裡？
+3. TDD 文件包含哪些章節？
+```
+
+**說明**：快速了解專案結構和文件組織方式。
+
+---
+
+#### 9. 查詢規範說明
+
+**指令範例**：
+```
+請解釋以下規範：
+- Domain Model 和 DTO 的區別
+- Entity 和 Value Object 的區別
+- Module Consolidation Rules
+- UseCase Consolidation Rules
+```
+
+**說明**：查詢特定規範的說明。
+
+---
+
+### 使用提示
+
+**如何詢問 Cursor Agent**：
+
+1. **直接複製指令**：將上述指令直接複製並貼上給 Cursor Agent
+2. **修改參數**：根據你的需求修改指令中的參數（如 FeatureName）
+3. **組合使用**：可以將多個指令組合使用，例如先生成 Domain Model，再生成 Module Sequence Diagram
+
+**注意事項**：
+
+- 所有指令都應該在 Cursor IDE 中使用
+- 確保已閱讀 `tdd_main_prompt.md` 了解完整規範
+- 生成的文件會自動放在 `output/` 資料夾下（已加入 .gitignore）
+
+---
+
+## 安裝 Markdown Preview 插件
 
 ### Cursor 內建的 Markdown Preview
 
@@ -491,9 +789,9 @@ output/
 
 雖然 Cursor 有內建的 Markdown Preview，但預設可能不支援 Mermaid 圖表渲染。建議安裝以下插件來啟用 Mermaid 支援：
 
-### 方法 1：使用 Cursor Agent 自動安裝
+#### 使用 Cursor Agent 自動安裝
 
-在 Cursor IDE 中，將 `install_mermaid_plugin.md` 文件中的指令提供給 AI Agent，或直接使用以下指令：
+在 Cursor IDE 中，將以下指令提供給 AI Agent：
 
 ```
 請幫我安裝 Mermaid Preview 插件到 Cursor IDE，讓 Markdown Preview 可以渲染 Mermaid 圖表。請執行以下步驟：
@@ -513,7 +811,7 @@ output/
    - 確認 Mermaid 圖表可以正常渲染
 ```
 
-### 方法 2：手動安裝
+#### 手動安裝
 
 1. 打開 Cursor IDE
 2. 按 `Cmd+Shift+X` (macOS) 或 `Ctrl+Shift+X` (Windows/Linux) 打開擴展面板
@@ -527,8 +825,6 @@ output/
 1. 打開任何包含 Mermaid 代碼的 `.md` 文件
 2. 使用 `Cmd+Shift+V` (macOS) 或 `Ctrl+Shift+V` (Windows/Linux) 打開 Markdown Preview
 3. 確認 Mermaid 圖表可以正常渲染
-
-**詳細說明請參考**：[install_mermaid_plugin.md](./install_mermaid_plugin.md)
 
 ---
 
