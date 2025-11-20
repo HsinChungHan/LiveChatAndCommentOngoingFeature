@@ -811,7 +811,69 @@ output/
         └── 01_usecase_input_output.md
 ```
 
-### 5.14.7 文件命名規範總結
+### 5.14.7 Input 資料引用規範
+
+**原則**：Output 目錄不應複製 Input 資料，而是透過引用建立關聯。
+
+#### 5.14.7.1 不複製 Input 的原因
+
+1. **單一來源原則（Single Source of Truth）**
+   - Input 是原始規格來源
+   - Output 是從 Input 生成的衍生文件
+   - 複製會造成多個來源，增加維護成本
+
+2. **維護成本**
+   - Input 更新時需同步更新 output 下的複本
+   - 容易出現版本不一致
+   - 增加儲存空間
+
+3. **職責分離**
+   - Input：原始規格（業務流程、補充資訊）
+   - Output：技術設計文件（TDD）
+   - 兩者職責不同，應分離
+
+#### 5.14.7.2 引用方式
+
+**方式 1：在 Overview 中引用（推薦）**
+
+在 `00_Overview/01_overview.md` 中添加「資料來源」章節：
+
+```markdown
+## 資料來源
+
+本 TDD 文件基於以下 Input 資料生成：
+
+- **Input 路徑**: `Input/LiveChat&PrematchComment/Mermaid/Prematch Comment/`
+- **Flow 列表**:
+  - PC-FULL-001: `User 進入 Upcoming Race Page, Prematch Comment Page 與 Top/`
+  - PC-SUB-001: `Event Status 訂閱與通知流程/`
+```
+
+**方式 2：透過 Flow ID 關聯**
+
+每個序列圖文件包含 Flow 資訊（flow_id、flow_name 等），可透過這些資訊追蹤到對應的 input。
+
+**方式 3：建立對照表（可選）**
+
+在 output 根目錄的 README 中建立 Input-Output 對照表：
+
+```markdown
+## Input-Output 對照表
+
+| Flow ID | Flow Name | Input 路徑 | Output 文件 |
+|---------|-----------|-----------|------------|
+| PC-FULL-001 | 用戶進入 Upcoming Race Page... | `Input/.../User 進入.../` | `05. Module Sequence Diagram/.../01_data_initialization_refresh.md` |
+```
+
+#### 5.14.7.3 檢查清單
+
+生成 TDD 文件時，請確認：
+
+- [ ] 未複製 Input 資料到 Output 目錄
+- [ ] 在 Overview 中添加資料來源引用
+- [ ] Flow 資訊中包含 flow_id，可追蹤到對應的 Input
+
+### 5.14.8 文件命名規範總結
 
 | 文件類型 | 命名格式 | 範例 |
 |---------|---------|------|
@@ -820,7 +882,7 @@ output/
 | **章節內容文件** | `{兩位數字}_{描述}.md` | `01_domain_model.md`<br>`02_domain_model_uml_standard.md` |
 | **序列圖文件** | `{兩位數字}_{類型}_{描述}.md` | `01_data_initialization_refresh.md`<br>`02_data_interaction_load_replies.md` |
 
-### 5.14.8 重要規則
+### 5.14.9 重要規則
 
 1. **所有文件必須放在 `output/` 資料夾下**
 2. **每個章節資料夾必須包含 README.md**
@@ -828,5 +890,6 @@ output/
 4. **文件編號必須使用兩位數字（01, 02, 03...）**
 5. **Module Sequence Diagram 章節必須按 Feature 分組**
 6. **所有 .md 文件必須使用 UTF-8 編碼**
+7. **不應複製 Input 資料到 Output 目錄，應透過引用建立關聯**
 
 ---
