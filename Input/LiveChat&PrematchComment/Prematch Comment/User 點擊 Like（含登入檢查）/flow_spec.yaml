@@ -1,0 +1,178 @@
+features:
+  PrematchComment:
+    flows:
+      - flow_id: PC-SUB-004
+        flow_type: Sub
+        flow_name: 用戶點擊 Like（含登入檢查）
+        parent_flow_id: PC-FULL-001
+        parent_flow_name: 用戶進入 Upcoming Race Page, Prematch Comment Page 與 Top
+        original_annotation: "@flow: Sub"
+        mermaid_code: |
+          ```mermaid
+          sequenceDiagram
+              autonumber
+              actor User
+              box rgb(255, 248, 220) App
+                  participant PrematchComment as PrematchComment Package
+                  participant MainApp as Main App
+                  participant PersonalPage as PersonalPage Package(external)(external)
+                  participant FComSharedFlow as FComSharedFlow Package(external)
+              end
+              participant Chat as Chat API Server
+              
+              User->>PrematchComment: 點擊 Like 按鈕
+              note over PrematchComment: 點擊 Like 按鈕時觸發登入檢查
+              PrematchComment->>MainApp: APICoordinator.shared.accountManager 檢查登入狀態
+              
+              alt [使用者已登入]
+                  MainApp-->>PrematchComment: 已登入
+                  note over PrematchComment: 通過登入檢查
+              else [使用者未登入]
+                  MainApp-->>PrematchComment: 未登入
+                  PrematchComment->>MainApp: route(to: .personalPage)
+                  MainApp->>PersonalPage: 跳轉到 PersonalPage
+                  PersonalPage->>PersonalPage: 完成 user 登入流程
+                  PersonalPage-->>PrematchComment: 登入成功（回跳至原頁面）
+              end
+              
+              note over PrematchComment: 立即更新畫面上的 Like 數（Optimistic UI）
+              PrematchComment-->>User: 顯示已點讚狀態 + Like +1
+              PrematchComment->>Chat: POST /chat/match/comment/like { commentId }
+              Chat-->>PrematchComment: 200 OK（更新成功）
+          ```
+        description: |
+          # 用戶點擊 Like（含登入檢查）流程說明
+
+          ## 流程概述
+
+          本流程為子流程（Sub Flow），主流程為：**用戶進入 Upcoming Race Page, Prematch Comment Page 與 Top**（flow_id: PC-FULL-001）。
+
+          本文件描述用戶點擊留言 Like 按鈕時的完整流程，包括登入檢查、Optimistic UI 更新以及 Like 狀態同步等功能。本流程涉及以下參與者：**User（用戶）**、**PrematchComment Package（賽前留言套件）**、**Main App（主應用程式）**、**PersonalPage Package(external)（個人頁面套件）** 和 **Chat API Server（聊天 API 伺服器）**。其中 PrematchComment Package、Main App、PersonalPage Package(external) 和 FComSharedFlow Package 都屬於 **App（應用程式）** 層級。
+
+          ---
+
+          ## 1. 點擊 Like 按鈕
+
+          當用戶點擊留言的 Like 按鈕時，PrematchComment Package 會先檢查用戶是否已登入。
+
+          - **用戶操作**：點擊 Like 按鈕
+          - **PrematchComment Package 行為**：點擊 Like 按鈕時觸發登入檢查
+          - **PrematchComment Package 行為**：調用 Main App 的 `APICoordinator.shared.accountManager` 檢查登入狀態
+
+          ---
+
+          ## 2. 登入檢查
+
+          PrematchComment Package 會檢查用戶是否已登入，未登入用戶會被導向登入流程。
+
+          ### 情境 A：使用者已登入
+          - **Main App 回應**：已登入
+          - **PrematchComment Package 處理**：通過登入檢查
+          - **PrematchComment Package 行為**：繼續執行 Like 操作
+
+          ### 情境 B：使用者未登入
+          - **Main App 回應**：未登入
+          - **PrematchComment Package 行為**：調用 Main App 的 `route(to: .personalPage)` 跳轉到 PersonalPage
+          - **Main App 行為**：跳轉到 PersonalPage
+          - **PersonalPage Package(external) 行為**：完成 user 登入流程
+          - **PersonalPage Package(external) 回應**：登入成功（回跳至原頁面）
+
+          ---
+
+          ## 3. Optimistic UI 更新
+
+          通過登入檢查後，PrematchComment Package 會立即更新畫面上的 Like 數，提供即時回饋。
+
+          - **PrematchComment Package 行為**：立即更新畫面上的 Like 數（Optimistic UI）
+          - **PrematchComment Package 行為**：顯示已點讚狀態 + Like +1
+
+          ---
+
+          ## 4. 同步 Like 狀態
+
+          PrematchComment Package 會向伺服器發送 Like 請求，同步 Like 狀態。
+
+          - **PrematchComment Package 行為**：向伺服器發送 `POST /chat/match/comment/like { commentId }` 請求
+          - **伺服器回應**：`200 OK`（更新成功）
+
+          ---
+
+          ## 技術備註
+
+          1. **登入檢查**：點擊 Like 按鈕時，PrematchComment Package 會調用 Main App 的 `APICoordinator.shared.accountManager` 檢查登入狀態，未登入用戶會被導向 PersonalPage 完成登入流程
+          2. **Optimistic UI**：使用 Optimistic UI 模式，立即更新畫面，提供更好的用戶體驗
+          3. **API 端點**：使用 `POST /chat/match/comment/like` API 來同步 Like 狀態
+          4. **狀態同步**：即使使用 Optimistic UI，仍會向伺服器同步狀態，確保資料一致性
+          5. **Package 架構**：PrematchComment Package、Main App、PersonalPage Package(external) 和 FComSharedFlow Package 都屬於 App 層級
+        api_endpoints:
+          - path: POST /chat/match/comment/like
+            method: POST
+            description: 點讚留言
+            parameters:
+              - commentId: 留言 ID
+            response: 200 OK（更新成功）
+        notes:
+          - 點擊 Like 按鈕時，PrematchComment Package 會調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+          - 未登入用戶會被導向 PersonalPage 完成登入流程
+          - 使用 Optimistic UI 模式，立即更新畫面，提供更好的用戶體驗
+          - 使用 POST /chat/match/comment/like API 來同步 Like 狀態
+          - 即使使用 Optimistic UI，仍會向伺服器同步狀態，確保資料一致性
+          - PrematchComment Package、Main App、PersonalPage Package(external) 和 FComSharedFlow Package 都屬於 App 層級
+        scenarios:
+          - name: 使用者已登入
+            description: 當用戶已登入時的行為
+            condition: 使用者已登入
+            actions:
+              - PrematchComment Package 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+              - Main App 回應已登入
+              - PrematchComment Package 通過登入檢查
+              - PrematchComment Package 立即更新畫面上的 Like 數（Optimistic UI）
+              - PrematchComment Package 顯示已點讚狀態 + Like +1
+              - PrematchComment Package 向伺服器發送 Like 請求
+          - name: 使用者未登入
+            description: 當用戶未登入時的行為
+            condition: 使用者未登入
+            actions:
+              - PrematchComment Package 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+              - Main App 回應未登入
+              - PrematchComment Package 調用 Main App 的 route(to: .personalPage)
+              - Main App 跳轉到 PersonalPage
+              - PersonalPage Package(external) 完成 user 登入流程
+              - PersonalPage Package(external) 回跳至 PrematchComment Package
+        user_actions:
+          - action: 點擊 Like 按鈕
+            description: 用戶點擊留言的 Like 按鈕
+            triggers:
+              - 登入檢查
+              - Like 操作
+        system_behaviors:
+          - behavior: 登入檢查
+            description: PrematchComment Package 在用戶點擊 Like 按鈕時調用 Main App 檢查登入狀態
+            package: PrematchComment Package
+            trigger: 點擊 Like 按鈕
+            method: 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+            condition: 檢查用戶是否已登入
+          - behavior: 路由跳轉到 PersonalPage
+            description: PrematchComment Package 調用 Main App 的路由功能跳轉到 PersonalPage
+            package: PrematchComment Package
+            trigger: 用戶未登入
+            method: 調用 Main App 的 route(to: .personalPage)
+            result: Main App 跳轉到 PersonalPage
+          - behavior: 完成登入流程
+            description: PersonalPage Package(external) 完成 user 登入流程
+            package: PersonalPage Package(external)
+            trigger: 跳轉到 PersonalPage
+            result: 登入成功後回跳至 PrematchComment Package
+          - behavior: Optimistic UI 更新
+            description: PrematchComment Package 立即更新畫面上的 Like 數（Optimistic UI）
+            package: PrematchComment Package
+            pattern: Optimistic UI
+            action: 顯示已點讚狀態 + Like +1
+          - behavior: 同步 Like 狀態
+            description: PrematchComment Package 向伺服器發送 Like 請求，同步 Like 狀態
+            package: PrematchComment Package
+            api: POST /chat/match/comment/like
+            parameters:
+              - commentId
+            response: 200 OK（更新成功）
+

@@ -1,0 +1,308 @@
+features:
+  PrematchComment:
+    flows:
+      - flow_id: PC-SUB-002
+        flow_type: Sub
+        flow_name: 用戶發 Comment - Reply（含登入與 nickname 檢查）
+        parent_flow_id: PC-FULL-001
+        parent_flow_name: 用戶進入 Upcoming Race Page, Prematch Comment Page 與 Top
+        original_annotation: "@flow: Sub"
+        mermaid_code: |
+          ```mermaid
+          sequenceDiagram
+              autonumber
+              actor User
+              box rgb(255, 248, 220) App
+                  participant PrematchComment as PrematchComment Package
+                  participant MainApp as Main App
+                  participant PersonalPage as PersonalPage Package(external)(external)
+                  participant FComSharedFlow as FComSharedFlow Package(external)(external)
+              end
+              participant Chat as Server
+
+              %% 使用者點擊輸入框 → 先做登入檢查
+              User->>PrematchComment: 點擊輸入框（準備輸入 Comment/Reply）
+              note over PrematchComment: 點擊輸入框時觸發登入檢查
+              PrematchComment->>MainApp: APICoordinator.shared.accountManager 檢查登入狀態
+
+              alt [使用者已登入]
+                  MainApp-->>PrematchComment: 已登入
+                  note over PrematchComment: 已登入，允許輸入留言
+              else [使用者未登入]
+                  MainApp-->>PrematchComment: 未登入
+                  PrematchComment->>MainApp: route(to: .personalPage)
+                  MainApp->>PersonalPage: 跳轉到 PersonalPage
+                  PersonalPage->>PersonalPage: 完成 user 登入流程
+                  PersonalPage-->>PrematchComment: 登入成功（回跳至原頁面）
+                  note over PrematchComment: 登入完成後可再次點擊輸入框繼續流程
+              end
+
+              %% 使用者輸入並送出 Comment/Reply
+              User->>PrematchComment: 輸入並送出 Comment/Reply
+
+              %% nickname 檢查（透過 Main App 的 accountManager）
+              note over PrematchComment: 送出前檢查 client 端 nickname 是否存在
+              PrematchComment->>MainApp: APICoordinator.shared.accountManager.currentMetadata?.nickname 檢查
+
+              alt [nickname 存在]
+                  MainApp-->>PrematchComment: nickname 存在
+                  note over PrematchComment: 已有 nickname，直接送出留言
+                  PrematchComment->>Chat: POST /chat/match/comment { refId, content, parentId? }
+
+                  alt [留言成功]
+                      Chat-->>PrematchComment: 201 Created（回傳 comment 資料）
+                      PrematchComment-->>User: 顯示新留言
+                  else [留言失敗]
+                      Chat-->>PrematchComment: 4xx/5xx Error（留言失敗）
+                      PrematchComment-->>User: 顯示錯誤 Toast（留言失敗）
+                  end
+
+              else [nickname 不存在]
+                  MainApp-->>PrematchComment: nickname 不存在
+                  note over PrematchComment: 需使用 FComSharedFlow Package(external) 建立 nickname
+                  
+                  %% App 端 nickname 建立流程（透過 FComSharedFlow Package(external)）
+                  PrematchComment->>FComSharedFlow: 調用 CreatNickName API
+                  FComSharedFlow-->>User: 顯示 create nickName pop-up
+                  User->>FComSharedFlow: 使用者輸入 nickname
+                  FComSharedFlow->>FComSharedFlow: FComSharedFlow Package(external) 建立 nickname
+                  FComSharedFlow-->>PrematchComment: nickname 建立成功
+
+                  PrematchComment->>Chat: POST /chat/match/comment { refId, content, parentId? }
+
+                  alt [留言成功]
+                      Chat-->>PrematchComment: 201 Created（回傳 comment 資料）
+                      PrematchComment-->>User: 顯示新留言
+                  else [留言失敗]
+                      Chat-->>PrematchComment: 4xx/5xx Error（留言失敗）
+                      PrematchComment-->>User: 顯示錯誤 Toast（留言失敗）
+                  end
+              end
+          ```
+        description: |
+          # 用戶發 Comment - Reply（含登入與 nickname 檢查）流程說明
+
+          ## 流程概述
+
+          本流程為子流程（Sub Flow），主流程為：**用戶進入 Upcoming Race Page, Prematch Comment Page 與 Top**（flow_id: PC-FULL-001）。
+
+          本文件描述用戶在 Prematch Comment Page 中輸入並送出留言或回覆時的完整流程，包括登入檢查、nickname 檢查、留言送出以及錯誤處理等情境。本流程涉及以下參與者：**User（用戶）**、**PrematchComment Package（賽前留言套件）**、**Main App（主應用程式）**、**PersonalPage Package(external)（個人頁面套件）**、**FComSharedFlow Package(external)（共享流程套件）** 和 **Server（伺服器）**。其中 PrematchComment Package、Main App、PersonalPage Package(external) 和 FComSharedFlow Package(external) 都屬於 **App（應用程式）** 層級。
+
+          ---
+
+          ## 1. 點擊輸入框與登入檢查
+
+          當用戶點擊輸入框準備輸入留言或回覆時，PrematchComment Package 會先檢查用戶是否已登入。
+
+          - **用戶操作**：點擊輸入框（準備輸入 Comment/Reply）
+          - **PrematchComment Package 行為**：點擊輸入框時觸發登入檢查
+          - **PrematchComment Package 行為**：調用 Main App 的 `APICoordinator.shared.accountManager` 檢查登入狀態
+
+          ### 情境 A：使用者已登入
+          - **Main App 回應**：已登入
+          - **PrematchComment Package 處理**：已登入，允許輸入留言
+
+          ### 情境 B：使用者未登入
+          - **Main App 回應**：未登入
+          - **PrematchComment Package 行為**：調用 Main App 的 `route(to: .personalPage)` 跳轉到 PersonalPage
+          - **Main App 行為**：跳轉到 PersonalPage
+          - **PersonalPage Package(external) 行為**：完成 user 登入流程
+          - **PersonalPage Package(external) 回應**：登入成功（回跳至原頁面）
+          - **PrematchComment Package 處理**：登入完成後可再次點擊輸入框繼續流程
+
+          ---
+
+          ## 2. 輸入並送出留言或回覆
+
+          當用戶輸入並送出留言或回覆時，PrematchComment Package 會先檢查用戶是否有 nickname，然後送出留言。
+
+          - **用戶操作**：輸入並送出 Comment/Reply
+          - **PrematchComment Package 行為**：送出前檢查 client 端 nickname 是否存在
+          - **PrematchComment Package 行為**：調用 Main App 的 `APICoordinator.shared.accountManager.currentMetadata?.nickname` 檢查 nickname
+
+          ---
+
+          ## 3. 留言送出處理（有 nickname）
+
+          如果用戶已有 nickname，PrematchComment Package 會直接送出留言。
+
+          - **Main App 回應**：nickname 存在
+          - **PrematchComment Package 處理**：已有 nickname，直接送出留言
+          - **PrematchComment Package 行為**：向伺服器發送 `POST /chat/match/comment { refId, content, parentId? }` 請求
+
+          ### 情境 A：留言成功
+          - **伺服器回應**：`201 Created`（回傳 comment 資料）
+          - **PrematchComment Package 行為**：顯示新留言
+
+          ### 情境 B：留言失敗
+          - **伺服器回應**：`4xx/5xx Error`（留言失敗）
+          - **PrematchComment Package 行為**：顯示錯誤 Toast（留言失敗）
+
+          ---
+
+          ## 4. 留言送出處理（無 nickname）
+
+          如果用戶沒有 nickname，PrematchComment Package 會調用 FComSharedFlow Package(external) 的 CreatNickName API 來建立 nickname，然後再送出留言。
+
+          - **Main App 回應**：nickname 不存在
+          - **PrematchComment Package 處理**：需使用 FComSharedFlow Package(external) 建立 nickname
+
+          ### 4.1 建立 nickname
+          - **PrematchComment Package 行為**：調用 FComSharedFlow Package(external) 提供的 CreatNickName API
+          - **FComSharedFlow Package(external) 行為**：在 App 上顯示 create nickName pop-up
+          - **用戶操作**：使用者輸入 nickname
+          - **FComSharedFlow Package(external) 處理**：FComSharedFlow Package(external) 建立 nickname
+          - **FComSharedFlow Package(external) 回應**：nickname 建立成功
+
+          ### 4.2 送出留言
+          - **PrematchComment Package 行為**：向伺服器發送 `POST /chat/match/comment { refId, content, parentId? }` 請求
+
+          ### 情境 A：留言成功
+          - **伺服器回應**：`201 Created`（回傳 comment 資料）
+          - **PrematchComment Package 行為**：顯示新留言
+
+          ### 情境 B：留言失敗
+          - **伺服器回應**：`4xx/5xx Error`（留言失敗）
+          - **PrematchComment Package 行為**：顯示錯誤 Toast（留言失敗）
+
+          ---
+
+          ## 技術備註
+
+          1. **登入檢查**：點擊輸入框時，PrematchComment Package 會調用 Main App 的 `APICoordinator.shared.accountManager` 檢查登入狀態，未登入用戶會被導向 PersonalPage 完成登入流程
+          2. **Nickname 檢查**：送出留言前，PrematchComment Package 會調用 Main App 的 `APICoordinator.shared.accountManager.currentMetadata?.nickname` 檢查 nickname 是否存在
+          3. **Nickname 建立**：如果沒有 nickname，PrematchComment Package 會調用 FComSharedFlow Package(external) 提供的 CreatNickName API，由 FComSharedFlow Package(external) 顯示 pop-up 並建立 nickname
+          4. **API 端點**：無論是否有 nickname，都使用 `POST /chat/match/comment` API
+          5. **錯誤處理**：留言失敗時會顯示錯誤 Toast 提示用戶
+          6. **回覆功能**：可以透過 `parentId` 參數來指定回覆的父留言
+          7. **Package 架構**：PrematchComment Package、Main App、PersonalPage Package(external) 和 FComSharedFlow Package(external) 都屬於 App 層級
+        api_endpoints:
+          - path: POST /chat/match/comment
+            method: POST
+            description: 送出留言或回覆
+            parameters:
+              - refId: 賽事參考 ID
+              - content: 留言內容
+              - parentId: 父留言 ID（可選，用於回覆）
+            response: comment 資料
+        notes:
+          - 點擊輸入框時，PrematchComment Package 會調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+          - 未登入用戶會被導向 PersonalPage 完成登入流程
+          - 送出留言前會檢查 client 端的 userInfo.nickname 是否存在
+          - 如果沒有 nickname，PrematchComment Package 會調用 FComSharedFlow Package(external) 提供的 CreatNickName API
+          - 無論是否有 nickname，都使用 POST /chat/match/comment API
+          - 留言失敗時會顯示錯誤 Toast 提示用戶
+          - 可以透過 parentId 參數來指定回覆的父留言
+          - PrematchComment Package、Main App、PersonalPage Package(external) 和 FComSharedFlow Package(external) 都屬於 App 層級
+        scenarios:
+          - name: 使用者已登入
+            description: 當用戶已登入時的行為
+            condition: 使用者已登入
+            actions:
+              - PrematchComment Package 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+              - Main App 回應已登入
+              - PrematchComment Package 允許輸入留言
+          - name: 使用者未登入
+            description: 當用戶未登入時的行為
+            condition: 使用者未登入
+            actions:
+              - PrematchComment Package 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+              - Main App 回應未登入
+              - PrematchComment Package 調用 Main App 的 route(to: .personalPage)
+              - Main App 跳轉到 PersonalPage
+              - PersonalPage Package(external) 完成 user 登入流程
+              - PersonalPage Package(external) 回跳至 PrematchComment Package
+          - name: 有 nickname 且留言成功
+            description: 當用戶有 nickname 且留言成功時的行為
+            condition: userInfo.nickname 存在且留言成功
+            actions:
+              - 向伺服器發送 POST /chat/match/comment 請求
+              - 顯示新留言
+          - name: 有 nickname 但留言失敗
+            description: 當用戶有 nickname 但留言失敗時的行為
+            condition: userInfo.nickname 存在但留言失敗
+            actions:
+              - 顯示錯誤 Toast（留言失敗）
+          - name: 無 nickname 且留言成功
+            description: 當用戶無 nickname 且留言成功時的行為
+            condition: userInfo.nickname 不存在且留言成功
+            actions:
+              - 顯示 nickname 建立彈窗
+              - 建立 nickname
+              - 向伺服器發送 POST /chat/match/comment 請求
+              - 顯示新留言
+          - name: 無 nickname 且留言失敗
+            description: 當用戶無 nickname 且留言失敗時的行為
+            condition: userInfo.nickname 不存在且留言失敗
+            actions:
+              - 顯示錯誤 Toast（留言失敗）
+        user_actions:
+          - action: 點擊輸入框
+            description: 用戶點擊輸入框準備輸入留言或回覆
+            triggers:
+              - 登入檢查
+          - action: 輸入並送出 Comment/Reply
+            description: 用戶輸入並送出留言或回覆
+            preconditions:
+              - 用戶已登入
+            triggers:
+              - nickname 檢查
+              - 留言送出
+          - action: 使用者輸入 nickname
+            description: 用戶輸入 nickname（當沒有 nickname 時）
+            preconditions:
+              - userInfo.nickname 不存在
+            triggers:
+              - 建立 nickname
+              - 送出留言
+        system_behaviors:
+          - behavior: 登入檢查
+            description: PrematchComment Package 在用戶點擊輸入框時調用 Main App 檢查登入狀態
+            package: PrematchComment Package
+            trigger: 點擊輸入框
+            method: 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+            condition: 檢查用戶是否已登入
+          - behavior: 路由跳轉到 PersonalPage
+            description: PrematchComment Package 調用 Main App 的路由功能跳轉到 PersonalPage
+            package: PrematchComment Package
+            trigger: 用戶未登入
+            method: 調用 Main App 的 route(to: .personalPage)
+            result: Main App 跳轉到 PersonalPage
+          - behavior: 完成登入流程
+            description: PersonalPage Package(external) 完成 user 登入流程
+            package: PersonalPage Package(external)
+            trigger: 跳轉到 PersonalPage
+            result: 登入成功後回跳至 PrematchComment Package
+          - behavior: nickname 檢查
+            description: PrematchComment Package 在送出留言前檢查 client 端的 nickname 是否存在
+            package: PrematchComment Package
+            check: userInfo.nickname 是否存在
+          - behavior: 建立 nickname
+            description: PrematchComment Package 調用 FComSharedFlow Package(external) 的 CreatNickName API 建立 nickname
+            package: PrematchComment Package
+            target_package: FComSharedFlow Package(external)
+            api: CreatNickName API
+            flow:
+              - PrematchComment Package 調用 FComSharedFlow Package(external) 的 CreatNickName API
+              - FComSharedFlow Package(external) 在 App 上顯示 create nickName pop-up
+              - 用戶輸入 nickname
+              - FComSharedFlow Package(external) 建立 nickname
+              - FComSharedFlow Package(external) 回應 nickname 建立成功
+            result: nickname 建立完成
+          - behavior: 送出留言
+            description: PrematchComment Package 送出留言或回覆
+            package: PrematchComment Package
+            api: POST /chat/match/comment
+            parameters:
+              - refId
+              - content
+              - parentId（可選，用於回覆）
+          - behavior: 顯示新留言
+            description: PrematchComment Package 顯示新留言
+            package: PrematchComment Package
+            condition: 留言成功
+          - behavior: 顯示錯誤 Toast
+            description: PrematchComment Package 顯示錯誤 Toast（當留言失敗時）
+            package: PrematchComment Package
+            condition: 留言失敗
+

@@ -1,0 +1,336 @@
+features:
+  LiveChat:
+    flows:
+      - flow_id: LC-SUB-001
+        flow_type: Sub
+        flow_name: 用戶留 comment 時登入與 nickname 檢查
+        parent_flow_id: LC-FULL-001
+        parent_flow_name: 用戶進入與離開聊天室（含 WebSocket 相依）
+        original_annotation: "@flow: Sub"
+        mermaid_code: |
+          ```mermaid
+          sequenceDiagram
+              autonumber
+              actor User
+              box rgb(255, 248, 220) App
+                  participant LiveChat as LiveChat Package
+                  participant MainApp as Main App
+                  participant PersonalPage as PersonalPage Package(external)
+                  participant FComSharedFlow as FComSharedFlow Package(external)
+              end
+              participant Chat as Server
+
+              %% 使用者點擊輸入框 → 先做登入檢查
+              User->>LiveChat: 點擊輸入框（準備輸入 Chat）
+              note over LiveChat: 點擊輸入框時觸發登入檢查
+              LiveChat->>MainApp: APICoordinator.shared.accountManager 檢查登入狀態
+
+              alt [使用者已登入]
+                  MainApp-->>LiveChat: 已登入
+                  note over LiveChat: 已登入，允許輸入留言
+              else [使用者未登入]
+                  MainApp-->>LiveChat: 未登入
+                  LiveChat->>MainApp: route(to: .personalPage)
+                  MainApp->>PersonalPage: 跳轉到 PersonalPage
+                  PersonalPage->>PersonalPage: 完成 user 登入流程
+                  PersonalPage-->>LiveChat: 登入成功（回跳至原頁面）
+                  note over LiveChat: 登入完成後可再次點擊輸入框繼續流程
+              end
+
+              %% 使用者輸入並送出 Comment/Reply
+              User->>LiveChat: 輸入並送出 Chat
+
+              %% nickname 檢查（透過 Main App 的 accountManager）
+              note over LiveChat: 送出前檢查 client 端 nickname 是否存在
+              LiveChat->>MainApp: APICoordinator.shared.accountManager.currentMetadata?.nickname 檢查
+
+              alt [nickname 存在]
+                  MainApp-->>LiveChat: nickname 存在
+                  note over LiveChat: 已有 nickname，直接送出 Chat
+                  LiveChat->>Chat: POST /chat/match/comment { refId, content, parentId? }
+
+                  alt [留言成功]
+                      Chat-->>LiveChat: 201 Created（回傳 comment 資料）
+                      LiveChat-->>User: 顯示新留言
+                  else [留言失敗]
+                      Chat-->>LiveChat: 4xx/5xx Error（留言失敗）
+                      LiveChat-->>User: 顯示錯誤 Toast（留言失敗）
+                  end
+
+              else [nickname 不存在]
+                  MainApp-->>LiveChat: nickname 不存在
+                  note over LiveChat: 需使用 FComSharedFlow Package 建立 nickname
+                  
+                  %% App 端 nickname 建立流程（透過 FComSharedFlow Package）
+                  LiveChat->>FComSharedFlow: 調用 CreatNickName API
+                  FComSharedFlow-->>User: 顯示 create nickName pop-up
+                  User->>FComSharedFlow: 使用者輸入 nickname
+                  FComSharedFlow->>FComSharedFlow: FComSharedFlow Package 建立 nickname
+                  FComSharedFlow-->>LiveChat: nickname 建立成功
+
+                  LiveChat->>Chat: POST /chat/{matchId}/message { content, messageType: TEXT }
+
+                  alt [留言成功]
+                      Chat-->>LiveChat: 201 Created
+                      LiveChat-->>User: 顯示 Chat 在最新的位置，並 highlight 3 秒
+                  else [留言失敗]
+                      Chat-->>LiveChat: 4xx/5xx Error（留言失敗）
+                      LiveChat-->>User: 顯示錯誤 Toast（留言失敗）
+                  end
+              end
+          ```
+        description: |
+          # 用戶留 comment 時登入與 nickname 檢查流程說明
+
+          ## 流程概述
+
+          本流程為子流程（Sub Flow），主流程為：**用戶進入與離開聊天室（含 WebSocket 相依）**（flow_id: LC-FULL-001）。
+
+          本文件描述用戶在聊天室中輸入並送出留言時的完整流程，包括登入檢查、nickname 檢查、留言送出以及錯誤處理等情境。本流程涉及以下參與者：**User（用戶）**、**LiveChat Package（聊天室套件）**、**Main App（主應用程式）**、**PersonalPage Package(external)（個人頁面套件）**、**FComSharedFlow Package(external)（共享流程套件）** 和 **Server（伺服器）**。其中 LiveChat Package（internal）、Main App、PersonalPage Package(external) 和 FComSharedFlow Package(external) 都屬於 **App（應用程式）** 層級。
+
+          ---
+
+          ## 1. 點擊輸入框與登入檢查
+
+          當用戶點擊輸入框準備輸入留言時，LiveChat Package 會先檢查用戶是否已登入。
+
+          - **用戶操作**：點擊輸入框（準備輸入 Chat）
+          - **LiveChat Package 行為**：點擊輸入框時觸發登入檢查
+          - **LiveChat Package 行為**：調用 Main App 的 `APICoordinator.shared.accountManager` 檢查登入狀態
+
+          ### 情境 A：使用者已登入
+          - **Main App 回應**：已登入
+          - **LiveChat Package 處理**：已登入，允許輸入留言
+
+          ### 情境 B：使用者未登入
+          - **Main App 回應**：未登入
+          - **LiveChat Package 行為**：調用 Main App 的 `route(to: .personalPage)` 跳轉到 PersonalPage
+          - **Main App 行為**：跳轉到 PersonalPage
+          - **PersonalPage Package(external) 行為**：完成 user 登入流程
+          - **PersonalPage Package(external) 回應**：登入成功（回跳至原頁面）
+          - **LiveChat Package 處理**：登入完成後可再次點擊輸入框繼續流程
+
+          ---
+
+          ## 2. 輸入並送出留言
+
+          當用戶輸入並送出留言時，LiveChat Package 會先透過 Main App 檢查用戶是否有 nickname，然後送出留言。
+
+          - **用戶操作**：輸入並送出 Chat
+          - **LiveChat Package 行為**：送出前檢查 client 端 nickname 是否存在
+          - **LiveChat Package 行為**：調用 Main App 的 `APICoordinator.shared.accountManager.currentMetadata?.nickname` 檢查 nickname
+
+          ---
+
+          ## 3. 留言送出處理（有 nickname）
+
+          如果用戶已有 nickname，LiveChat Package 會直接送出留言。
+
+          - **Main App 回應**：nickname 存在
+          - **LiveChat Package 處理**：已有 nickname，直接送出 Chat
+          - **LiveChat Package 行為**：向伺服器發送 `POST /chat/match/comment { refId, content, parentId? }` 請求
+
+          ### 情境 A：留言成功
+          - **伺服器回應**：`201 Created`（回傳 comment 資料）
+          - **LiveChat Package 行為**：顯示新留言
+
+          ### 情境 B：留言失敗
+          - **伺服器回應**：`4xx/5xx Error`（留言失敗）
+          - **LiveChat Package 行為**：顯示錯誤 Toast（留言失敗）
+
+          ---
+
+          ## 4. 留言送出處理（無 nickname）
+
+          如果用戶沒有 nickname，LiveChat Package 會調用 FComSharedFlow Package 的 CreatNickName API 來建立 nickname，然後再送出留言。
+
+          - **Main App 回應**：nickname 不存在
+          - **LiveChat Package 處理**：需使用 FComSharedFlow Package 建立 nickname
+
+          ### 4.1 建立 nickname
+          - **LiveChat Package 行為**：調用 FComSharedFlow Package(external) 提供的 CreatNickName API
+          - **FComSharedFlow Package(external) 行為**：在 App 上顯示 create nickName pop-up
+          - **用戶操作**：使用者輸入 nickname
+          - **FComSharedFlow Package(external) 處理**：FComSharedFlow Package(external) 建立 nickname
+          - **FComSharedFlow Package(external) 回應**：nickname 建立成功
+
+          ### 4.2 送出留言
+          - **LiveChat Package 行為**：向伺服器發送 `POST /chat/{matchId}/message { content, messageType: TEXT }` 請求
+
+          ### 情境 A：留言成功
+          - **伺服器回應**：`201 Created`
+          - **LiveChat Package 行為**：顯示 Chat 在最新的位置，並 highlight 3 秒
+
+          ### 情境 B：留言失敗
+          - **伺服器回應**：`4xx/5xx Error`（留言失敗）
+          - **LiveChat Package 行為**：顯示錯誤 Toast（留言失敗）
+
+          ---
+
+          ## 技術備註
+
+          1. **登入檢查**：點擊輸入框時，LiveChat Package 會調用 Main App 的 `APICoordinator.shared.accountManager` 檢查登入狀態，未登入用戶會被導向 PersonalPage 完成登入流程
+          2. **Nickname 檢查**：送出留言前，LiveChat Package 會調用 Main App 的 `APICoordinator.shared.accountManager.currentMetadata?.nickname` 檢查 nickname 是否存在
+          3. **Nickname 建立**：如果沒有 nickname，LiveChat Package 會調用 FComSharedFlow Package(external) 提供的 CreatNickName API，由 FComSharedFlow Package(external) 顯示 pop-up 並建立 nickname
+          4. **API 差異**：有 nickname 時使用 `POST /chat/match/comment`，無 nickname 時使用 `POST /chat/{matchId}/message`
+          5. **錯誤處理**：留言失敗時會顯示錯誤 Toast 提示用戶
+          6. **視覺回饋**：留言成功後會顯示在最新位置，並 highlight 3 秒
+          7. **Package 架構**：LiveChat Package（internal）、Main App、PersonalPage Package(external) 和 FComSharedFlow Package(external) 都屬於 App 層級
+        api_endpoints:
+          - path: POST /chat/match/comment
+            method: POST
+            description: 送出留言（有 nickname 時使用）
+            parameters:
+              - refId: 賽事參考 ID
+              - content: 留言內容
+              - parentId: 父留言 ID（可選，用於回覆）
+            response: comment 資料
+          - path: POST /chat/{matchId}/message
+            method: POST
+            description: 送出留言（無 nickname 時使用）
+            parameters:
+              - matchId: 賽事 ID
+              - content: 留言內容
+              - messageType: TEXT
+            response: 201 Created
+        notes:
+          - 點擊輸入框時，LiveChat Package 會調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+          - 未登入用戶會被導向 PersonalPage 完成登入流程
+          - 送出留言前，LiveChat Package 會調用 Main App 的 APICoordinator.shared.accountManager.currentMetadata?.nickname 檢查 nickname 是否存在
+          - 如果沒有 nickname，LiveChat Package 會調用 FComSharedFlow Package(external) 提供的 CreatNickName API
+          - FComSharedFlow Package(external) 會在 App 上顯示 create nickName pop-up，用戶輸入後由 FComSharedFlow Package(external) 建立 nickname
+          - 有 nickname 時使用 POST /chat/match/comment，無 nickname 時使用 POST /chat/{matchId}/message
+          - 留言失敗時會顯示錯誤 Toast 提示用戶
+          - 留言成功後會顯示在最新位置，並 highlight 3 秒
+          - LiveChat Package（internal）、Main App、PersonalPage Package(external) 和 FComSharedFlow Package(external) 都屬於 App 層級
+        scenarios:
+          - name: 使用者已登入
+            description: 當用戶已登入時的行為
+            condition: 使用者已登入
+            actions:
+              - LiveChat Package 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+              - Main App 回應已登入
+              - LiveChat Package 允許輸入留言
+          - name: 使用者未登入
+            description: 當用戶未登入時的行為
+            condition: 使用者未登入
+            actions:
+              - LiveChat Package 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+              - Main App 回應未登入
+              - LiveChat Package 調用 Main App 的 route(to: .personalPage)
+              - Main App 跳轉到 PersonalPage
+              - PersonalPage Package(external) 完成 user 登入流程
+              - PersonalPage Package(external) 回跳至 LiveChat Package
+          - name: 有 nickname 且留言成功
+            description: 當用戶有 nickname 且留言成功時的行為
+            condition: nickname 存在且留言成功
+            actions:
+              - LiveChat Package 調用 Main App 的 APICoordinator.shared.accountManager.currentMetadata?.nickname 檢查
+              - Main App 回應 nickname 存在
+              - LiveChat Package 向伺服器發送 POST /chat/match/comment 請求
+              - LiveChat Package 顯示新留言
+          - name: 有 nickname 但留言失敗
+            description: 當用戶有 nickname 但留言失敗時的行為
+            condition: nickname 存在但留言失敗
+            actions:
+              - LiveChat Package 顯示錯誤 Toast（留言失敗）
+          - name: 無 nickname 且留言成功
+            description: 當用戶無 nickname 且留言成功時的行為
+            condition: nickname 不存在且留言成功
+            actions:
+              - LiveChat Package 調用 Main App 的 APICoordinator.shared.accountManager.currentMetadata?.nickname 檢查
+              - Main App 回應 nickname 不存在
+              - LiveChat Package 調用 FComSharedFlow Package(external) 的 CreatNickName API
+              - FComSharedFlow Package(external) 顯示 create nickName pop-up
+              - 用戶輸入 nickname
+              - FComSharedFlow Package(external) 建立 nickname
+              - LiveChat Package 向伺服器發送 POST /chat/{matchId}/message 請求
+              - LiveChat Package 顯示 Chat 在最新的位置，並 highlight 3 秒
+          - name: 無 nickname 且留言失敗
+            description: 當用戶無 nickname 且留言失敗時的行為
+            condition: nickname 不存在且留言失敗
+            actions:
+              - LiveChat Package 顯示錯誤 Toast（留言失敗）
+        user_actions:
+          - action: 點擊輸入框
+            description: 用戶點擊輸入框準備輸入留言
+            triggers:
+              - 登入檢查
+          - action: 輸入並送出 Chat
+            description: 用戶輸入並送出留言
+            preconditions:
+              - 用戶已登入
+            triggers:
+              - nickname 檢查
+              - 留言送出
+          - action: 使用者輸入 nickname
+            description: 用戶輸入 nickname（當沒有 nickname 時）
+            preconditions:
+              - userInfo.nickname 不存在
+            triggers:
+              - 建立 nickname
+              - 送出留言
+        system_behaviors:
+          - behavior: 登入檢查
+            description: LiveChat Package 在用戶點擊輸入框時調用 Main App 檢查登入狀態
+            package: LiveChat Package
+            trigger: 點擊輸入框
+            method: 調用 Main App 的 APICoordinator.shared.accountManager 檢查登入狀態
+            condition: 檢查用戶是否已登入
+          - behavior: 路由跳轉到 PersonalPage
+            description: LiveChat Package 調用 Main App 的路由功能跳轉到 PersonalPage
+            package: LiveChat Package
+            trigger: 用戶未登入
+            method: 調用 Main App 的 route(to: .personalPage)
+            result: Main App 跳轉到 PersonalPage
+          - behavior: 完成登入流程
+            description: PersonalPage Package(external) 完成 user 登入流程
+            package: PersonalPage Package(external)
+            trigger: 跳轉到 PersonalPage
+            result: 登入成功後回跳至 LiveChat Package
+          - behavior: nickname 檢查
+            description: LiveChat Package 在送出留言前調用 Main App 檢查 nickname 是否存在
+            package: LiveChat Package
+            method: 調用 Main App 的 APICoordinator.shared.accountManager.currentMetadata?.nickname 檢查
+            check: nickname 是否存在
+          - behavior: 建立 nickname
+            description: LiveChat Package 調用 FComSharedFlow Package(external) 的 CreatNickName API 建立 nickname
+            package: LiveChat Package
+            target_package: FComSharedFlow Package(external)
+            api: CreatNickName API
+            flow:
+              - LiveChat Package 調用 FComSharedFlow Package(external) 的 CreatNickName API
+              - FComSharedFlow Package(external) 在 App 上顯示 create nickName pop-up
+              - 用戶輸入 nickname
+              - FComSharedFlow Package(external) 建立 nickname
+              - FComSharedFlow Package(external) 回應 nickname 建立成功
+          - behavior: 送出留言（有 nickname）
+            description: LiveChat Package 送出留言（當用戶有 nickname 時）
+            package: LiveChat Package
+            api: POST /chat/match/comment
+            parameters:
+              - refId
+              - content
+              - parentId（可選）
+          - behavior: 送出留言（無 nickname）
+            description: LiveChat Package 送出留言（當用戶無 nickname 時）
+            package: LiveChat Package
+            api: POST /chat/{matchId}/message
+            parameters:
+              - matchId
+              - content
+              - messageType: TEXT
+          - behavior: 顯示新留言
+            description: LiveChat Package 顯示新留言
+            package: LiveChat Package
+            condition: 留言成功
+          - behavior: 顯示錯誤 Toast
+            description: LiveChat Package 顯示錯誤 Toast（當留言失敗時）
+            package: LiveChat Package
+            condition: 留言失敗
+          - behavior: highlight 留言
+            description: LiveChat Package 在最新位置顯示留言並 highlight 3 秒
+            package: LiveChat Package
+            condition: 留言成功且無 nickname
+            duration: 3 秒
+

@@ -1,0 +1,167 @@
+features:
+  PrematchComment:
+    flows:
+      - flow_id: PC-SUB-006
+        flow_type: Sub
+        flow_name: 用戶從 In-Site message 跳轉到 Prematch Comment Page
+        parent_flow_id: PC-FULL-001
+        parent_flow_name: 用戶進入 Upcoming Race Page, Prematch Comment Page 與 Top
+        original_annotation: "@flow: Sub"
+        mermaid_code: |
+          ```mermaid
+          sequenceDiagram
+              autonumber
+              actor User
+              participant NotificationCentre as NotificationCentre Package(external)
+              box rgb(255, 248, 220) Main App
+                  participant HomeVC as HomeViewController class
+                  participant Destination as Destination class
+              end
+              participant LiveChat as LiveChat Package
+
+              %% User 收到 In-Site message 並點擊
+              User->>NotificationCentre: 進入 Messages Page
+              User->>NotificationCentre: 點擊 message 中的 Go To Prematch Comment button
+
+              %% NotificationCentre 調用 HomeViewController 處理 deep link
+              NotificationCentre->>HomeVC: notificationCenterDidRequestAction(deepLinkUrl)
+              note over HomeVC: 傳入 deep link url
+
+              %% Destination class 解析 URL
+              HomeVC->>Destination: 解析 deep link url
+              Destination->>Destination: 解析出 page 與 queryItems(action items)
+              Destination-->>HomeVC: 回傳解析結果 { page, queryItems }
+
+              %% 跳轉到 Match Detail Page
+              HomeVC->>NotificationCentre: 跳轉到 match detail page
+              note over NotificationCentre: 將 queryItems 傳給 main app
+
+              %% NotificationCentre 通知 LiveChat Package 打開 Prematch Comment Page
+              NotificationCentre->>LiveChat: 通知打開 Prematch Comment page
+              note over NotificationCentre,LiveChat: 傳入 queryItems（action items）
+              LiveChat-->>User: 顯示 Prematch Comment Page
+          ```
+        description: |
+          # 用戶從 In-Site message 跳轉到 Prematch Comment Page 流程說明
+
+          ## 流程概述
+
+          本流程為子流程（Sub Flow），主流程為：**用戶進入 Upcoming Race Page, Prematch Comment Page 與 Top**（flow_id: PC-FULL-001）。
+
+          本文件描述用戶收到 In-Site message 後，點擊 message 中的按鈕，跳轉到 Match Detail Page 並打開 Prematch Comment Page 的完整流程。本流程涉及以下參與者：**User（用戶）**、**NotificationCentre Package(external)（通知中心套件）**、**HomeViewController class（首頁視圖控制器類別）**、**Destination class（目標解析類別）** 和 **LiveChat Package（聊天室套件）**。其中 HomeViewController class 和 Destination class 都屬於 **Main App（主應用程式）** 層級，NotificationCentre Package(external) 和 LiveChat Package（internal）為獨立的 Package。
+
+          ---
+
+          ## 1. 進入 Messages Page 並點擊按鈕
+
+          當用戶收到 In-Site message 後，會進入 NotificationCentre Package(external) 的 Messages Page，並點擊 message 中的按鈕來跳轉到 Prematch Comment Page。
+
+          - **用戶操作**：進入 Messages Page
+          - **用戶操作**：點擊 message 中的 Go To Prematch Comment button
+
+          ---
+
+          ## 2. 處理 Deep Link
+
+          NotificationCentre Package(external) 會調用 HomeViewController class 的方法來處理 deep link，並透過 Destination class 解析 URL。
+
+          - **NotificationCentre Package(external) 行為**：調用 HomeViewController class 的 `notificationCenterDidRequestAction(deepLinkUrl)` 方法
+          - **傳入參數**：deep link url
+          - **HomeViewController class 行為**：將 deep link url 傳給 Destination class 進行解析
+          - **Destination class 行為**：解析 deep link url，解析出 page 與 queryItems（action items）
+          - **Destination class 回應**：回傳解析結果，包含 page 和 queryItems
+
+          ---
+
+          ## 3. 跳轉到 Match Detail Page
+
+          解析完成後，HomeViewController class 會通知 NotificationCentre Package(external) 跳轉到 Match Detail Page，並將 queryItems 傳給 NotificationCentre Package(external)。
+
+          - **HomeViewController class 行為**：通知 NotificationCentre Package(external) 跳轉到 match detail page
+          - **NotificationCentre Package(external) 行為**：接收 queryItems（action items）
+          - **NotificationCentre Package(external) 行為**：執行跳轉到 Match Detail Page
+
+          ---
+
+          ## 4. 打開 Prematch Comment Page
+
+          NotificationCentre Package(external) 在跳轉到 Match Detail Page 後，會通知 LiveChat Package 打開 Prematch Comment Page。
+
+          - **NotificationCentre Package(external) 行為**：通知 LiveChat Package 打開 Prematch Comment page
+          - **傳入參數**：queryItems（action items）
+          - **LiveChat Package 行為**：根據 queryItems 打開 Prematch Comment Page
+          - **LiveChat Package 回應**：顯示 Prematch Comment Page 給用戶
+
+          ---
+
+          ## 技術備註
+
+          1. **Deep Link 處理**：使用 HomeViewController class 的 `notificationCenterDidRequestAction` 方法來處理 deep link
+          2. **URL 解析**：透過 Destination class 解析 deep link url，提取 page 和 queryItems（action items）
+          3. **頁面跳轉**：NotificationCentre Package(external) 負責執行頁面跳轉，從 Messages Page 跳轉到 Match Detail Page
+          4. **Package 通知**：NotificationCentre Package(external) 在跳轉完成後通知 LiveChat Package 打開 Prematch Comment Page
+          5. **參數傳遞**：queryItems（action items）會從 Destination class 傳遞到 NotificationCentre Package(external)，再傳遞給 LiveChat Package
+          6. **架構說明**：HomeViewController class 和 Destination class 都屬於 Main App 層級，NotificationCentre Package(external) 和 LiveChat Package 為獨立的 Package
+        notes:
+          - 使用 HomeViewController class 的 notificationCenterDidRequestAction 方法來處理 deep link
+          - 透過 Destination class 解析 deep link url，提取 page 和 queryItems（action items）
+          - NotificationCentre Package(external) 負責執行頁面跳轉，從 Messages Page 跳轉到 Match Detail Page
+          - NotificationCentre Package(external) 在跳轉完成後通知 LiveChat Package 打開 Prematch Comment Page
+          - queryItems（action items）會從 Destination class 傳遞到 NotificationCentre Package(external)，再傳遞給 LiveChat Package
+          - HomeViewController class 和 Destination class 都屬於 Main App 層級，NotificationCentre Package(external) 和 LiveChat Package 為獨立的 Package
+        scenarios:
+          - name: 點擊 Go To Prematch Comment button
+            description: 當用戶點擊 message 中的 Go To Prematch Comment button 時的行為
+            condition: 用戶在 Messages Page 中點擊 Go To Prematch Comment button
+            trigger: 用戶點擊 message 中的 Go To Prematch Comment button
+            actions:
+              - NotificationCentre Package(external) 調用 HomeViewController class 的 notificationCenterDidRequestAction 方法
+              - HomeViewController class 將 deep link url 傳給 Destination class 進行解析
+              - Destination class 解析出 page 與 queryItems（action items）
+              - HomeViewController class 通知 NotificationCentre Package(external) 跳轉到 match detail page
+              - NotificationCentre Package(external) 執行跳轉並將 queryItems 傳給 LiveChat Package
+              - LiveChat Package 打開 Prematch Comment Page
+            result: 用戶看到 Prematch Comment Page
+        user_actions:
+          - action: 進入 Messages Page
+            description: 用戶進入 NotificationCentre Package(external) 的 Messages Page
+            triggers:
+              - 顯示 In-Site messages
+          - action: 點擊 message 中的 Go To Prematch Comment button
+            description: 用戶點擊 message 中的 Go To Prematch Comment 按鈕
+            preconditions:
+              - 用戶已進入 Messages Page
+              - 用戶已收到 In-Site message
+            triggers:
+              - NotificationCentre Package(external) 處理 deep link
+              - 跳轉到 Match Detail Page
+              - 打開 Prematch Comment Page
+        system_behaviors:
+          - behavior: 處理 Deep Link
+            description: NotificationCentre Package(external) 調用 HomeViewController class 的 notificationCenterDidRequestAction 方法處理 deep link
+            package: NotificationCentre Package(external)
+            target_class: HomeViewController class
+            method: notificationCenterDidRequestAction(deepLinkUrl)
+            parameter: deep link url
+          - behavior: 解析 URL
+            description: Destination class 解析 deep link url，提取 page 和 queryItems（action items）
+            package: Destination class
+            input: deep link url
+            output:
+              - page: 目標頁面
+              - queryItems: action items
+            method: 解析 deep link url
+          - behavior: 跳轉到 Match Detail Page
+            description: HomeViewController class 通知 NotificationCentre Package(external) 跳轉到 Match Detail Page
+            package: HomeViewController class
+            target: NotificationCentre Package(external)
+            action: 跳轉到 match detail page
+            parameters: queryItems（action items）
+          - behavior: 打開 Prematch Comment Page
+            description: NotificationCentre Package(external) 通知 LiveChat Package 打開 Prematch Comment Page
+            package: NotificationCentre Package(external)
+            target_package: LiveChat Package
+            action: 通知打開 Prematch Comment page
+            parameters: queryItems（action items）
+            result: LiveChat Package 顯示 Prematch Comment Page
+

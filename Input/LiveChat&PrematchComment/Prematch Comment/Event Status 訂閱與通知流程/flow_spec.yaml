@@ -1,0 +1,220 @@
+features:
+  PrematchComment:
+    flows:
+      - flow_id: PC-SUB-001
+        flow_type: Sub
+        flow_name: Event Status 訂閱與通知流程
+        parent_flow_id: PC-FULL-001
+        parent_flow_name: 用戶進入 Upcoming Race Page, Prematch Comment Page 與 Top
+        original_annotation: "@flow: Sub"
+        mermaid_code: |
+          ```mermaid
+          sequenceDiagram
+              autonumber
+              actor User
+              box rgb(255, 248, 220) App
+                  participant LiveChat as LiveChat Package
+                  participant FactsCenter as FactsCenter Package(external)
+              end
+              participant Server as Server
+
+              %% Event status 訂閱（在進入 Race Detail Page 時）
+              note over User,LiveChat: 用戶進入 Race Detail Page
+              FactsCenter->>Server: WebSocket 訂閱 Event Status
+              note over FactsCenter,Server: FactsCenter Package(external) 透過 WebSocket 向 Server 訂閱 Event Status
+
+              %% Event status 變化時，自動關閉 Prematch Comment Page
+              note over User,LiveChat: Prematch Comment Page 處於開啟狀態（需先進入 Race Detail Page）
+              Server-->>FactsCenter: EventStatusChanged
+              FactsCenter->>LiveChat: eventStatus(didChange status: Int)
+              note over FactsCenter,LiveChat: FactsCenter Package(external) 透過 interface 通知 LiveChat Package
+              alt [若 event status 有改變，且為 match_started]
+                  LiveChat->>User: 關閉 Prematch Comment Page（導回 Race Detail Page）
+                  note over LiveChat: 下次再打開 Chat Room 時，會是 match ongoing 的 chat room
+              else [若 event status 沒有改變]
+                  note over LiveChat: APP 維持原畫面
+              end
+
+          ```
+        description: |
+          # Event Status 訂閱與通知流程說明
+
+          ## 流程概述
+
+          本文件描述 FactsCenter Package(external) 和 LiveChat Package 之間關於 Event Status 訂閱與通知的交互流程。當用戶進入 Race Detail Page 時，FactsCenter Package(external) 會自動訂閱 Event Status，並在事件狀態變更時透過 interface 通知 LiveChat Package。本流程涉及以下參與者：**User（用戶）**、**LiveChat Package（聊天室套件）**、**FactsCenter Package(external)（事實中心套件）** 和 **Server（伺服器）**。其中 LiveChat Package（internal）和 FactsCenter Package(external) 都屬於 **App（應用程式）** 層級。
+
+          **本流程為子流程（Sub Flow）**，主流程為：**用戶進入 Upcoming Race Page, Prematch Comment Page 與 Top**（flow_id: PC-FULL-001）。
+
+          ---
+
+          ## 1. Event Status 訂閱（在進入 Race Detail Page 時）
+
+          當用戶進入 **Race Detail Page（賽事詳情頁面）** 時，FactsCenter Package(external) 會自動透過 WebSocket 向 Server 訂閱該賽事的 Event Status。
+
+          - **前置條件**：用戶進入 Race Detail Page
+          - **應用程式行為**：FactsCenter Package(external) 透過 **WebSocket** 向 Server 訂閱 Event Status
+          - **技術說明**：
+            - FactsCenter Package(external) 在用戶進入 Race Detail Page 時自動訂閱該賽事的 Event Status
+            - 目前 FactsCenter Package(external) 尚未實作由外部傳送 eventID 後主動訂閱的功能
+            - 因此必須先開啟 Race Detail Page，讓 FactsCenter Package(external) 完成 Event Status 的訂閱
+
+          ---
+
+          ## 2. Event Status 變更通知與處理
+
+          當 Server 推送 Event Status 變更事件時，FactsCenter Package(external) 會接收事件並透過 interface 通知 LiveChat Package，LiveChat Package 根據事件狀態進行相應處理。
+
+          ### 前置條件與架構限制
+
+          **重要前置條件**：Chat Room（Prematch Comment Page）的開啟與 Race Detail Page 場景強綁定。用戶必須先進入 Race Detail Page 才能開啟 Chat Room。
+
+          **技術原因**：
+          - 當用戶進入 Race Detail Page 時，FactsCenter Package(external) 會自動訂閱該賽事的 Event Status
+          - 目前 FactsCenter Package(external) 尚未實作由外部傳送 eventID 後主動訂閱的功能
+          - 因此必須先開啟 Race Detail Page，讓 FactsCenter Package(external) 完成 Event Status 的訂閱後，才能確保 Chat Room 能正確接收事件狀態變更通知
+
+          ### 事件狀態變更流程
+
+          - **前置條件**：Prematch Comment Page 處於開啟狀態，且已透過 Race Detail Page 完成 Event Status 訂閱
+          - **伺服器通知**：Server 透過 WebSocket 推送 `EventStatusChanged` 事件給 FactsCenter Package(external)
+          - **Package 間通知**：FactsCenter Package(external) 接收事件後，透過 public interface 通知 LiveChat Package
+            - **Interface 定義**：`func eventStatus(didChange status: Int)`
+            - ⚠️ **架構建議**：建議 LiveChat Package 和 FactsCenter Package(external) 之間應透過 Notification Center 進行解耦，兩者都相依於 Notification Center，而非直接相依彼此
+          - **應用程式判斷**：LiveChat Package 收到通知後，根據事件狀態進行處理：
+            - **若 event status 有改變，且為 `match_started`**：自動關閉 Prematch Comment Page，並導回 Race Detail Page。下次用戶再打開 Chat Room 時，會是 **match ongoing 的 chat room**
+            - **若 event status 沒有改變**：APP 維持原畫面
+
+          ---
+
+          ## 技術備註
+
+          1. **Event Status 訂閱機制**：
+             - FactsCenter Package(external) 在用戶進入 Race Detail Page 時，透過 **WebSocket** 向 Server 訂閱該賽事的 Event Status
+             - 目前 FactsCenter Package(external) 尚未實作由外部傳送 eventID 後主動訂閱的功能
+             - 因此必須先開啟 Race Detail Page，讓 FactsCenter Package(external) 完成 Event Status 的訂閱
+
+          2. **事件通知架構**：
+             - Server 透過 WebSocket 推送 EventStatusChanged 事件給 FactsCenter Package(external)
+             - LiveChat Package 定義 public interface（func eventStatus(didChange status: Int)）
+             - FactsCenter Package(external) 在事件狀態改變時透過此 interface 主動通知 LiveChat Package
+             - **架構建議**：建議引入 Notification Center 作為中介層，讓 LiveChat Package 和 FactsCenter Package(external) 解耦，兩者都相依於 Notification Center，而非直接相依彼此
+
+          3. **事件狀態處理邏輯**：
+             - 若 event status 有改變，且為 `match_started` 時：自動關閉 Prematch Comment Page，導回 Race Detail Page。下次用戶再打開 Chat Room 時，會是 **match ongoing 的 chat room**
+             - 若 event status 沒有改變：APP 維持原畫面，Prematch Comment Page 繼續保持開啟狀態
+
+          4. **Package 架構**：
+             - LiveChat Package 和 FactsCenter Package(external) 都屬於 App 層級
+             - 兩者透過 interface 進行通訊，建議未來透過 Notification Center 解耦
+
+          5. **Chat Room 開啟限制**：
+             - 由於 Event Status 訂閱的技術限制，Chat Room 必須在用戶先進入 Race Detail Page 後才能開啟
+        scenarios:
+          - name: Event Status 訂閱
+            description: FactsCenter Package(external) 在用戶進入 Race Detail Page 時自動訂閱 Event Status
+            preconditions:
+              - 用戶進入 Race Detail Page
+            condition: 用戶進入 Race Detail Page
+            trigger: 用戶進入 Race Detail Page
+            actions:
+              - FactsCenter Package(external) 透過 WebSocket 向 Server 訂閱 Event Status
+            result: FactsCenter Package(external) 完成 Event Status 的訂閱
+          - name: 事件狀態變更（有改變且為 match_started）
+            description: 當 event status 有改變，且為 match_started 時自動關閉 Prematch Comment Page
+            preconditions:
+              - 用戶已先進入 Race Detail Page（FactsCenter Package(external) 已透過 WebSocket 訂閱 Event Status）
+              - Prematch Comment Page 處於開啟狀態
+            condition: 收到 EventStatusChanged 事件，event status 有改變，且為 match_started
+            trigger: Server 透過 WebSocket 推送 EventStatusChanged（match_started）給 FactsCenter Package(external)
+            architecture:
+              - Server 透過 WebSocket 推送事件給 FactsCenter Package(external)
+              - FactsCenter Package(external) 透過 public interface 通知 LiveChat Package
+              - LiveChat Package 的 interface method: func eventStatus(didChange status: Int)
+            actions:
+              - Server 透過 WebSocket 推送 EventStatusChanged（match_started）給 FactsCenter Package(external)
+              - FactsCenter Package(external) 接收事件
+              - FactsCenter Package(external) 透過 interface 通知 LiveChat Package
+              - LiveChat Package 判斷 event status 有改變，且為 match_started
+              - LiveChat Package 關閉 Prematch Comment Page
+              - 將用戶導回 Race Detail Page
+            result: 下次用戶再打開 Chat Room 時，會是 match ongoing 的 chat room
+          - name: 事件狀態沒有改變
+            description: 當 event status 沒有改變時，APP 維持原畫面
+            preconditions:
+              - 用戶已先進入 Race Detail Page（FactsCenter Package(external) 已透過 WebSocket 訂閱 Event Status）
+              - Prematch Comment Page 處於開啟狀態
+            condition: 收到 EventStatusChanged 事件，但 event status 沒有改變
+            trigger: Server 透過 WebSocket 推送 EventStatusChanged 給 FactsCenter Package(external)，但狀態沒有改變
+            architecture:
+              - Server 透過 WebSocket 推送事件給 FactsCenter Package(external)
+              - FactsCenter Package(external) 透過 public interface 通知 LiveChat Package
+              - LiveChat Package 的 interface method: func eventStatus(didChange status: Int)
+            actions:
+              - Server 透過 WebSocket 推送 EventStatusChanged 給 FactsCenter Package(external)
+              - FactsCenter Package(external) 接收事件
+              - FactsCenter Package(external) 透過 interface 通知 LiveChat Package
+              - LiveChat Package 判斷 event status 沒有改變
+              - APP 維持原畫面
+            result: Prematch Comment Page 繼續保持開啟狀態，用戶可以繼續使用
+        system_behaviors:
+          - behavior: 訂閱事件狀態（在進入 Race Detail Page 時）
+            description: FactsCenter Package(external) 在用戶進入 Race Detail Page 時，透過 WebSocket 自動訂閱該賽事的 Event Status
+            package: FactsCenter Package(external)
+            package_type: external
+            protocol: WebSocket
+            action: 透過 WebSocket 向 Server 訂閱 Event Status
+            limitation: 目前 FactsCenter Package(external) 尚未實作由外部傳送 eventID 後主動訂閱的功能
+            impact: 導致必須先開啟 Race Detail Page 才能確保 Chat Room 能正確接收事件狀態變更通知
+          - behavior: 接收事件狀態變更通知
+            description: FactsCenter Package(external) 透過 WebSocket 接收 Server 推送的 EventStatusChanged 事件
+            package: FactsCenter Package(external)
+            package_type: external
+            protocol: WebSocket
+            event: EventStatusChanged
+            source: Server 透過 WebSocket 推送
+          - behavior: 通知 LiveChat Package 事件狀態變更
+            description: FactsCenter Package(external) 透過 public interface 通知 LiveChat Package 事件狀態已改變
+            package: FactsCenter Package(external)
+            package_type: external
+            interface:
+              method: func eventStatus(didChange status: Int)
+              target: LiveChat Package
+            flow:
+              - FactsCenter Package(external) 接收 Server 推送的 EventStatusChanged 事件
+              - FactsCenter Package(external) 透過 interface 通知 LiveChat Package
+          - behavior: 處理事件狀態變更
+            description: LiveChat Package 接收 FactsCenter Package(external) 的通知後，根據事件狀態進行處理
+            package: LiveChat Package
+            package_type: internal
+            interface:
+              method: func eventStatus(didChange status: Int)
+              provider: FactsCenter Package(external)
+            scenarios:
+              - condition: 若 event status 有改變，且為 match_started
+                action: 自動關閉 Prematch Comment Page，導回 Race Detail Page
+                result: 下次用戶再打開 Chat Room 時，會是 match ongoing 的 chat room
+              - condition: 若 event status 沒有改變
+                action: APP 維持原畫面
+                result: Prematch Comment Page 繼續保持開啟狀態，用戶可以繼續使用
+            architecture_note: 建議 LiveChat Package 和 FactsCenter Package(external) 之間應透過 Notification Center 進行解耦，兩者都相依於 Notification Center，而非直接相依彼此
+        notes:
+          - **Event Status 訂閱機制**：
+            * FactsCenter Package(external) 在用戶進入 Race Detail Page 時，透過 **WebSocket** 向 Server 訂閱該賽事的 Event Status
+            * 目前 FactsCenter Package(external) 尚未實作由外部傳送 eventID 後主動訂閱的功能
+            * 因此必須先開啟 Race Detail Page，讓 FactsCenter Package(external) 完成 Event Status 的訂閱
+          - **事件通知架構**：
+            * Server 透過 WebSocket 推送 EventStatusChanged 事件給 FactsCenter Package(external)
+            * LiveChat Package 定義 public interface（func eventStatus(didChange status: Int)）
+            * FactsCenter Package(external) 在事件狀態改變時透過此 interface 主動通知 LiveChat Package
+            * **架構建議**：建議引入 Notification Center 作為中介層，讓 LiveChat Package 和 FactsCenter Package(external) 解耦，兩者都相依於 Notification Center，而非直接相依彼此
+          - **事件狀態處理邏輯**：
+            * 若 event status 有改變，且為 `match_started` 時：自動關閉 Prematch Comment Page，導回 Race Detail Page。下次用戶再打開 Chat Room 時，會是 **match ongoing 的 chat room**
+            * 若 event status 沒有改變：APP 維持原畫面，Prematch Comment Page 繼續保持開啟狀態
+          - **Package 架構**：
+            * LiveChat Package（internal）和 FactsCenter Package(external) 都屬於 App 層級
+            * 兩者透過 interface 進行通訊，建議未來透過 Notification Center 解耦
+          - **Chat Room 開啟限制**：
+            * 由於 Event Status 訂閱的技術限制，Chat Room 必須在用戶先進入 Race Detail Page 後才能開啟
+
+
+

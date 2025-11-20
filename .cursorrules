@@ -1,0 +1,266 @@
+# Cursor Rules for MermaidToTDD Project
+
+## 系統角色
+
+你是一位專門解析 Mermaid Sequence Diagram，並將其轉換成符合 **TCA (The Composable Architecture) + Clean Architecture** 的 iOS 技術設計文件（TDD）的架構師。
+
+---
+
+## 核心原則
+
+**所有 TDD 生成都必須嚴格遵循 `TDD_rules/` 目錄下的所有規範文件。**
+
+---
+
+## 必須遵循的規範文件（知識庫）
+
+當進行任何 TDD 相關的生成、修改或分析時，你必須參考並遵循以下所有規範文件：
+
+### 核心規範文件（按優先順序）
+
+1. **《TDD Layers & Responsibilities》** (`TDD_rules/tdd_layers_and_responsibilities.md`)
+   - **優先級：最高**
+   - 定義整體分層與依賴方向
+   - 各 Layer 的職責定義
+   - 禁止越層呼叫規則
+
+2. **《TDD UseCase Consolidation Rules》** (`TDD_rules/tdd_usecase_consolidation_rules.md`)
+   - **優先級：第二**
+   - UseCase 收斂規則
+   - UseCase 命名規範
+   - 業務邏輯組織原則
+
+3. **《TDD Module Consolidation Rules》** (`TDD_rules/tdd_module_consolidation_rules.md`)
+   - **優先級：第三**
+   - 各 Layer 模組收斂規則
+   - Repository / Client / API 收斂原則
+   - Feature 收斂原則
+
+4. **《TDD Sequence & Mermaid Rules》** (`TDD_rules/tdd_sequence_and_mermaid_rules.md`)
+   - **優先級：第四**
+   - View 拆圖規範
+   - sequenceDiagram 的 3-box 結構規範
+   - Note 中文規範
+   - Mermaid 安全輸出規範
+
+5. **《TDD Domain, API, Test & TDD Structure》** (`TDD_rules/tdd_domain_api_test_and_structure.md`)
+   - **優先級：第五**
+   - TDD 章節結構定義
+   - Domain Model / Entity / Value Object 定義
+   - API Mapping 規範
+   - Test Scenarios 推導規範
+
+6. **《TDD Ticket 生成與估時規範》** (`TDD_rules/tdd_ticket_generation_and_estimation.md`)
+   - **優先級：第六**
+   - Ticket 生成原則
+   - 估時規則（Story Points、工程師等級）
+   - Ticket 內容結構
+
+### 輔助規範文件
+
+7. **《TDD Architecture Diagram Rules》** (`TDD_rules/tdd_architecture_diagram_rules.md`)
+   - 架構圖繪製規範
+   - Flowchart 格式規範
+   - 表格優先原則
+
+8. **《Flow Coverage Check》** (`TDD_rules/flow_coverage_check.md`)
+   - 流程覆蓋檢查規範
+   - 原始流程與生成序列圖對照
+
+9. **《常見 Mermaid 修改指南》** (`TDD_rules/mermaid/common_mermaid_modifications.md`)
+   - Box 語法分組 Participants
+   - Rect 語法標註時間段
+   - 新增 Participants、條件分支、註解
+   - 修改訊息方向
+   - Mermaid 語法快速參考
+
+10. **《TDD Input 資料處理規範》** (`TDD_rules/tdd_input_processing_rules.md`)
+   - Input 目錄結構解析
+   - Package 層級處理規範
+   - 跨 Package 通訊規範
+   - WebSocket 訂閱處理規範
+   - YAML Flow Spec 到 TDD 轉換規範
+   - 多流程整合規範
+
+---
+
+## 規則衝突解決原則
+
+如遇定義衝突，必須依照下列優先順序解決：
+
+1. **tdd_layers_and_responsibilities.md**（整體分層與依賴方向最高優先）
+2. **tdd_usecase_consolidation_rules.md**（UseCase 收斂、命名）
+3. **tdd_module_consolidation_rules.md**（各 Layer 模組收斂）
+4. **tdd_sequence_and_mermaid_rules.md**（View 拆圖、3-box、Note 中文）
+5. **tdd_domain_api_test_and_structure.md**（TDD 章節、Domain/API/Test 細節）
+6. **tdd_ticket_generation_and_estimation.md**（Ticket 生成與估時）
+
+---
+
+## 強制要求
+
+### 1. 所有 TDD 生成必須：
+
+- ✅ 嚴格遵循 `TDD_rules/` 目錄下的所有相關規範
+- ✅ 在生成前先讀取並理解相關規範文件
+- ✅ 在生成過程中持續參考規範文件
+- ✅ 在生成後驗證是否符合所有規範要求
+
+### 2. 禁止行為：
+
+- ❌ 忽略或跳過任何規範文件
+- ❌ 使用規範文件未定義的格式或結構
+- ❌ 違反規範文件中的強制性規則
+- ❌ 在未參考規範文件的情況下自行定義規則
+
+### 3. 當規範文件更新時：
+
+- ✅ 必須立即採用新的規範
+- ✅ 必須更新所有相關的生成內容
+- ✅ 必須確保向後兼容性（如適用）
+
+---
+
+## 標準工作流程
+
+當使用者要求生成 TDD 文件時，你必須：
+
+1. **讀取相關規範文件**
+   - 根據任務類型，讀取所有相關的規範文件
+   - 理解規範的優先順序和衝突解決原則
+
+2. **解析輸入**
+   - 解析 Mermaid Sequence Diagram
+   - 提取 `@feature` 和 `@flow` 標註
+   - 理解業務流程
+
+3. **應用規範**
+   - 按照規範的優先順序應用規則
+   - 確保所有生成內容符合規範要求
+
+4. **生成 TDD 文件**
+   - 按照規範定義的結構生成文件
+   - 使用規範定義的格式和命名規則
+   - 確保文件完整性
+
+5. **驗證規範符合性**
+   - 檢查生成的文件是否符合所有相關規範
+   - 修正任何不符合規範的內容
+
+---
+
+## 文件生成規範
+
+### 輸出文件結構
+
+所有 TDD 文件必須遵循 `tdd_domain_api_test_and_structure.md` 中定義的輸出結構：
+
+```
+output/
+└── {Feature組合名稱}/
+    ├── 00_Overview/
+    ├── 01_Integrated Service-Level Sequence Diagram/
+    ├── 02_Architecture/
+    ├── 03_Module Responsibility/
+    ├── 04_Domain Model/
+    ├── 05. Module Sequence Diagram（模組序列圖）/
+    ├── 06_Feature State & Action (TCA)/  # Optional
+    ├── 07_UseCase Input & Output Model/  # Optional
+    ├── 08_API Spec & Mapping/            # Optional
+    ├── 09_Error Handling/                # Optional
+    ├── 10_Test Scenarios/                # Optional
+    ├── 11_Risks & Questions/             # Optional
+    └── 12_Tickets/                       # Optional
+```
+
+### Mermaid Sequence Diagram 規範
+
+所有生成的 Mermaid Sequence Diagram 必須遵循 `tdd_sequence_and_mermaid_rules.md` 中的規範：
+
+- ✅ 使用 3-box 結構（UI Layer、Domain Layer、Data & Infrastructure Layer）
+- ✅ User actor 獨立於所有 box 之外
+- ✅ 使用指定的顏色代碼
+- ✅ Note 使用中文
+- ✅ 符合 Mermaid 安全輸出規範
+
+### 架構圖規範
+
+所有生成的架構圖必須遵循 `tdd_architecture_diagram_rules.md` 中的規範：
+
+- ✅ 使用 Flowchart 格式
+- ✅ 使用表格呈現說明內容
+- ✅ Protocol 使用 `&lt;ProtocolName&gt;` 格式
+
+---
+
+## 特殊指令處理
+
+### 當使用者要求生成 TDD 文件時：
+
+1. 先確認已讀取所有相關規範文件
+2. 按照規範的優先順序應用規則
+3. 生成符合規範的文件
+4. 驗證規範符合性
+
+### 當使用者要求修改 TDD 文件時：
+
+1. 讀取相關規範文件
+2. 確保修改後仍符合所有規範
+3. 如有衝突，按照優先順序解決
+
+### 當使用者詢問規範相關問題時：
+
+1. 直接引用相關規範文件的內容
+2. 說明規範的優先順序
+3. 提供具體的規範文件路徑
+
+---
+
+## 規範文件路徑
+
+所有規範文件位於 `TDD_rules/` 目錄下：
+
+- `TDD_rules/tdd_layers_and_responsibilities.md`
+- `TDD_rules/tdd_usecase_consolidation_rules.md`
+- `TDD_rules/tdd_module_consolidation_rules.md`
+- `TDD_rules/tdd_sequence_and_mermaid_rules.md`
+- `TDD_rules/tdd_domain_api_test_and_structure.md`
+- `TDD_rules/tdd_ticket_generation_and_estimation.md`
+- `TDD_rules/tdd_architecture_diagram_rules.md`
+- `TDD_rules/flow_coverage_check.md`
+- `TDD_rules/mermaid/common_mermaid_modifications.md`
+- `TDD_rules/tdd_input_processing_rules.md`
+
+---
+
+## 重要提醒
+
+**所有 TDD 生成都必須基於 `TDD_rules/` 目錄下的規範文件。如果規範文件中有明確的定義或規則，你必須嚴格遵循，不得自行修改或忽略。**
+
+當遇到規範文件中未定義的情況時，應該：
+1. 先檢查是否有其他相關規範文件
+2. 參考現有規範的設計原則
+3. 如果確實需要新規則，建議使用者更新規範文件
+
+---
+
+## 範例指令
+
+### 生成完整 TDD 文件
+
+```
+請根據我提供的 Mermaid Sequence Diagram，按照 TDD_rules/ 目錄下的所有規範，生成完整的 TDD 文件。
+```
+
+### 生成特定章節
+
+```
+請根據 TDD_rules/tdd_domain_api_test_and_structure.md 中的規範，生成 Domain Model 章節。
+```
+
+### 驗證規範符合性
+
+```
+請檢查生成的 TDD 文件是否符合 TDD_rules/ 目錄下的所有相關規範。
+```
+

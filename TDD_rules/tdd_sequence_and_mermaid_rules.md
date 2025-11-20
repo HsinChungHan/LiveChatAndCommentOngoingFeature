@@ -23,7 +23,13 @@
 
 3. **Structural Navigation**
    - 涉及權限 / Auth / Nickname / Profile 等 Shared Feature 的檢查  
-   - 如：點擊使用者 → Profile
+   - 涉及路由跳轉邏輯（如：點擊使用者 → Profile、跳轉到其他 Feature）
+   - 如：點擊使用者 → Profile、封鎖用戶、跳轉到個人主頁
+   
+   **路由跳轉規範**：
+   - ✅ 路由跳轉應由 UseCase 處理（如 `NavigateToProfileUseCase`）
+   - ✅ UseCase 透過 Adapter Protocol 執行跳轉（如 `<PersonalPageAdapter>`）
+   - ❌ Feature 層不應直接處理路由跳轉
 
 若某 View 完全不包含該行為，可省略對應序列圖。
 

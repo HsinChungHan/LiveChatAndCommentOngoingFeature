@@ -37,14 +37,26 @@
 
 ### 1.3 各類型圖表的職責
 
-#### 1.3.1 整體架構概覽（01_clean_architecture_overview.md）
+#### 1.3.1 整體架構概覽（高階架構圖）
 
-- **目的**：提供高層級的架構視圖
+- **目的**：提供高層級的架構視圖，快速了解整體結構
 - **內容**：
-  - 主要 Layer（UI、Domain、Data & Infrastructure、Domain Model）
-  - 各 Layer 的模組數量或代表性模組
+  - 主要 Layer（UI、Domain、Data & Infrastructure、Domain Model、Protocol）
+  - 各 Layer 的模組數量（如「3 個 View」「9 個 UseCase」）
   - 層級間的依賴關係
-- **特點**：不顯示所有細節，只顯示結構和數量
+- **特點**：
+  - 不顯示所有細節，只顯示結構和數量
+  - 使用 placeholder 節點（如「3 個 View」）而非具體模組名稱
+  - 模組數量直接顯示在節點中
+  - 提供清晰的層級結構和依賴方向
+
+**高階架構圖規範**：
+- ✅ 使用 placeholder 節點顯示模組數量（如「3 個 View」「9 個 UseCase」）
+- ✅ 模組數量直接顯示在節點文字中
+- ✅ 保留完整的依賴關係箭頭
+- ✅ 包含 Protocol Layer（如有使用外部 Package）
+- ❌ 不列出具體的模組名稱
+- ❌ 不過度簡化依賴關係
 
 #### 1.3.2 Feature 完整架構（02_{feature}_feature_architecture.md）
 
@@ -126,13 +138,64 @@
 
 1. **UI Layer**（最上層）
 2. **Domain Layer**（Feature + UseCase）
-3. **Protocol Layer**（如有 Shared Modules）
+3. **Protocol Layer**（如有 Shared Modules 或外部 Package）
 4. **Internal Implementation Layer**（內部實現）
 5. **Adapter Layer**（外部 Package 整合時）
 6. **Repository Layer**
 7. **Client Layer**
 8. **API Layer**
 9. **Domain Model Layer**（最下層）
+10. **External Packages**（最下層，如有使用）
+
+### 2.2.1 高階架構圖（概覽）規範
+
+高階架構圖應遵循以下規範：
+
+1. **使用 Placeholder 節點**：
+   - 不顯示具體模組名稱
+   - 使用模組數量描述（如「3 個 View」「9 個 UseCase」）
+   - 模組數量直接顯示在節點文字中
+
+2. **保留完整依賴關係**：
+   - 保留所有層級間的依賴箭頭
+   - 使用實線箭頭表示依賴關係
+   - 使用虛線箭頭表示使用關係（如 Repository → Domain Model）
+
+3. **包含 Protocol Layer**：
+   - 如有使用外部 Package，應顯示 Protocol Layer
+   - Protocol Layer 位於 Domain Layer 和 External Packages 之間
+
+4. **樣式規範**：
+   - 使用 subgraph 組織不同 Layer
+   - 使用 classDef 定義各層的顏色樣式
+   - 保持視覺清晰和層次分明
+
+**範例結構**：
+```mermaid
+flowchart TD
+    subgraph UILayer["UI Layer"]
+        UILayerPlaceholder["3 個 View"]
+    end
+    subgraph DomainLayer["Domain Layer"]
+        subgraph FeatureLayer["Feature Layer"]
+            FeatureLayerPlaceholder["2 個 Feature"]
+        end
+        subgraph UseCaseLayer["UseCase Layer"]
+            UseCaseLayerPlaceholder["9 個 UseCase"]
+        end
+    end
+    subgraph ProtocolLayer["Protocol Layer"]
+        ProtocolLayerPlaceholder["Adapter Protocols"]
+    end
+    subgraph ExternalPackages["External Packages"]
+        ExternalPackagesPlaceholder["3 個 External Package"]
+    end
+    
+    UILayerPlaceholder --> FeatureLayerPlaceholder
+    FeatureLayerPlaceholder --> UseCaseLayerPlaceholder
+    UseCaseLayerPlaceholder --> ProtocolLayerPlaceholder
+    ProtocolLayerPlaceholder -.-> ExternalPackagesPlaceholder
+```
 
 ### 2.3 subgraph 使用規範
 
