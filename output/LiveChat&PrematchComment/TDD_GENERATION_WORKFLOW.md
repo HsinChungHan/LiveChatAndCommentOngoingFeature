@@ -296,7 +296,6 @@ wss://api.example.com/chat/websocket/web-chat
   }
 }
 ```
-```
 
 #### 2.3 資料模型說明（可選但建議）
 
