@@ -22,7 +22,7 @@
 
 ```mermaid
 flowchart TD
-    A[階段 0：需求收集與文件準備<br/>PM PRD + BE API Spec + Designer UI/UX Spec] --> B[階段 1：需求分析與流程設計<br/>Client Side RD：理解需求、識別 Feature、設計流程]
+    A[階段 0：需求收集與文件準備<br/>PM PRD + BE API Spec + Designer UI/UX Spec<br/>+ QA Test Cases + Android/iOS 對齊] --> B[階段 1：需求分析與流程設計<br/>Client Side RD：理解需求、識別 Feature、設計流程]
     B --> C[階段 2：產生 Input 資料<br/>Client Side RD：Mermaid + Description + YAML]
     C --> D[階段 3：AI 自動化生成 TDD<br/>基於 TDD_rules/ 規範，自動生成所有 TDD 章節]
     D --> E[階段 4：生成 Ticket 與估時<br/>根據 TDD 自動生成開發 Ticket 和估時]
@@ -45,6 +45,8 @@ flowchart TD
 1. PM 提供 PRD
 2. BE 提供 API Spec
 3. Designer 提供 UI/UX Spec
+4. QA 提供 Test Cases / Test Scenarios
+5. 對齊 Android/iOS 的行為
 
 #### 階段 1：需求分析與流程設計
 
@@ -580,7 +582,7 @@ Input 資料位置：
 
 | 階段 | Junior | Mid-level | Senior |
 |------|--------|-----------|--------|
-| **階段 0：需求收集** | PM/BE/Designer 提供文件 | PM/BE/Designer 提供文件 | PM/BE/Designer 提供文件 |
+| **階段 0：需求收集** | PM/BE/Designer/QA 提供文件<br/>+ Android/iOS 對齊 | PM/BE/Designer/QA 提供文件<br/>+ Android/iOS 對齊 | PM/BE/Designer/QA 提供文件<br/>+ Android/iOS 對齊 |
 | **階段 1：需求分析與流程設計** | 5-8 天 | 3-5 天 | 1.5-3 天 |
 | **階段 2：產生 Input 資料（AI 輔助）** | 0.5-1 天 | 0.25-0.5 天 | 0.25 天 |
 | **階段 3：AI 生成 TDD** | 3-5 天 | 2-3 天 | 1-2 天 |
@@ -594,7 +596,7 @@ Input 資料位置：
 
 | 階段 | Junior | Mid-level | Senior |
 |------|--------|-----------|--------|
-| **階段 0：需求收集** | PM/BE/Designer 提供文件 | PM/BE/Designer 提供文件 | PM/BE/Designer 提供文件 |
+| **階段 0：需求收集** | PM/BE/Designer/QA 提供文件<br/>+ Android/iOS 對齊 | PM/BE/Designer/QA 提供文件<br/>+ Android/iOS 對齊 | PM/BE/Designer/QA 提供文件<br/>+ Android/iOS 對齊 |
 | **階段 1：需求分析與流程設計** | 5-8 天 | 3-5 天 | 1.5-3 天 |
 | **階段 2：產生 Input 資料（手動，不推薦）** | 3-5 天 | 2-3 天 | 1-2 天 |
 | **階段 3：手動生成 TDD** | 10-15 天 | 7-10 天 | 5-7 天 |
