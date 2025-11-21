@@ -38,9 +38,17 @@ jobs:
       
       - name: Verify files
         run: |
+          echo "Checking output directory..."
           ls -la output/
-          ls -la output/LiveChat&PrematchComment/ | head -10
+          echo ""
+          echo "Checking docs directory..."
+          ls -la "output/LiveChat&PrematchComment/" | head -10
+          echo ""
+          echo "Checking mkdocs.yml..."
           test -f output/mkdocs.yml && echo "✓ mkdocs.yml found" || echo "✗ mkdocs.yml NOT found"
+          echo ""
+          echo "Checking if docs_dir exists..."
+          test -d "output/LiveChat&PrematchComment" && echo "✓ docs_dir exists" || echo "✗ docs_dir NOT found"
       
       - name: Build with MkDocs
         run: |
