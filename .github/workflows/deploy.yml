@@ -45,7 +45,12 @@ jobs:
       - name: Build with MkDocs
         run: |
           cd output
-          mkdocs build --verbose
+          mkdocs build --verbose 2>&1 || {
+            echo "MkDocs build failed. Checking files..."
+            ls -la
+            ls -la LiveChat&PrematchComment/ | head -20
+            exit 1
+          }
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
