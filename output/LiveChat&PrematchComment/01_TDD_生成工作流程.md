@@ -40,36 +40,43 @@ flowchart TD
 
 ### 流程說明
 
-1. **階段 0：需求收集與文件準備**
-   - PM 提供 PRD
-   - BE 提供 API Spec
-   - Designer 提供 UI/UX Spec
+#### 階段 0：需求收集與文件準備
 
-2. **階段 1：需求分析與流程設計**
-   - Client Side RD 理解需求
-   - 識別 Feature 邊界
-   - 設計流程
+1. PM 提供 PRD
+2. BE 提供 API Spec
+3. Designer 提供 UI/UX Spec
 
-3. **階段 2：產生 Input 資料**
-   - Client Side RD 提供自然語言敘述
-   - AI 工具生成 Mermaid Sequence Diagram
-   - AI 工具生成 Description
-   - AI 工具生成 YAML Flow Spec
+#### 階段 1：需求分析與流程設計
 
-4. **階段 3：AI 自動化生成 TDD**
-   - 基於 TDD_rules/ 規範
-   - 自動生成所有 TDD 章節
+1. Client Side RD 理解需求
+2. 識別 Feature 邊界
+3. 設計流程
 
-5. **階段 4：生成 Ticket 與估時**
-   - 根據 TDD 自動生成開發 Ticket
-   - 估算開發時間
+#### 階段 2：產生 Input 資料
 
-6. **階段 5：開發實作**
-   - 按照 Ticket 順序進行開發
+1. Client Side RD 提供自然語言敘述
+2. AI 工具生成 Mermaid Sequence Diagram
+3. AI 工具生成 Description
+4. AI 工具生成 YAML Flow Spec
 
-7. **階段 6：同步 Codebase 實作到 TDD**
-   - 根據實際實作更新 TDD 文件
-   - 確保文件與代碼一致
+#### 階段 3：AI 自動化生成 TDD
+
+1. 基於 TDD_rules/ 規範
+2. 自動生成所有 TDD 章節
+
+#### 階段 4：生成 Ticket 與估時
+
+1. 根據 TDD 自動生成開發 Ticket
+2. 估算開發時間
+
+#### 階段 5：開發實作
+
+1. 按照 Ticket 順序進行開發
+
+#### 階段 6：同步 Codebase 實作到 TDD
+
+1. 根據實際實作更新 TDD 文件
+2. 確保文件與代碼一致
 
 ---
 
