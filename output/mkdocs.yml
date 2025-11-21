@@ -1,0 +1,136 @@
+site_name: LiveChat & PrematchComment TDD
+site_description: Technical Design Document for LiveChat and PrematchComment Features
+site_author: TDD Team
+
+# 文件目錄設定
+docs_dir: LiveChat&PrematchComment
+site_dir: site
+
+# 主題配置
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+# Markdown 擴展
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+
+# 插件
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+# 導航結構
+nav:
+  - Overview: 
+    - 00_Overview/01_overview.md
+  - Integrated Service-Level Sequence Diagram:
+    - 01_Integrated Service-Level Sequence Diagram/01_full_integration_flow.md
+  - Architecture:
+    - 02_Architecture/01_clean_architecture_diagram.md
+  - Module Responsibility:
+    - 03_Module Responsibility/01_module_responsibility.md
+  - Domain Model:
+    - 04_Domain Model/01_domain_model.md
+    - 04_Domain Model/02_domain_model_uml_standard.md
+  - Module Sequence Diagram:
+    - LiveChat:
+      - 05. Module Sequence Diagram（模組序列圖）/LiveChat/Module Sequence Diagrams/01_data_initialization_initialize_chatroom.md
+      - 05. Module Sequence Diagram（模組序列圖）/LiveChat/Module Sequence Diagrams/02_data_interaction_send_message.md
+      - 05. Module Sequence Diagram（模組序列圖）/LiveChat/Module Sequence Diagrams/03_structural_navigation_block_user.md
+      - 05. Module Sequence Diagram（模組序列圖）/LiveChat/Module Sequence Diagrams/04_structural_navigation_profile.md
+    - PrematchComment:
+      - 05. Module Sequence Diagram（模組序列圖）/PrematchComment/Module Sequence Diagrams/01_data_initialization_refresh.md
+      - 05. Module Sequence Diagram（模組序列圖）/PrematchComment/Module Sequence Diagrams/02_data_interaction_publish_comment.md
+      - 05. Module Sequence Diagram（模組序列圖）/PrematchComment/Module Sequence Diagrams/03_data_interaction_toggle_like.md
+      - 05. Module Sequence Diagram（模組序列圖）/PrematchComment/Module Sequence Diagrams/04_data_interaction_load_replies.md
+      - 05. Module Sequence Diagram（模組序列圖）/PrematchComment/Module Sequence Diagrams/05_structural_navigation_profile.md
+      - 05. Module Sequence Diagram（模組序列圖）/PrematchComment/Module Sequence Diagrams/06_event_status_subscription.md
+  - Feature State & Action (TCA):
+    - 06_Feature State & Action (TCA)/01_feature_state_action.md
+  - UseCase Input & Output Model:
+    - 07_UseCase Input & Output Model/01_usecase_input_output.md
+  - API Spec & Mapping:
+    - 08_API Spec & Mapping/01_api_spec.md
+  - Error Handling:
+    - 09_Error Handling/01_error_handling.md
+  - Test Scenarios:
+    - 10_Test Scenarios/01_test_scenarios.md
+  - Risks & Questions:
+    - 11_Risks & Questions/01_risks_questions.md
+  - Tickets:
+    - 12_Tickets/README.md
+    - Domain Model:
+      - 12_Tickets/01_domain_model/TDD-001_Comment_Entity.md
+      - 12_Tickets/01_domain_model/TDD-002_CommentMeta_Entity.md
+      - 12_Tickets/01_domain_model/TDD-003_UserInfo_Entity.md
+      - 12_Tickets/01_domain_model/TDD-004_Message_Entity.md
+      - 12_Tickets/01_domain_model/TDD-005_ChatroomInfo_Entity.md
+      - 12_Tickets/01_domain_model/TDD-006_ValueObjects.md
+    - API:
+      - 12_Tickets/02_api/TDD-010_PrematchCommentAPI.md
+      - 12_Tickets/02_api/TDD-011_ChatAPI.md
+    - Client:
+      - 12_Tickets/03_client/TDD-020_PrematchCommentClient.md
+      - 12_Tickets/03_client/TDD-021_LiveChatClient.md
+      - 12_Tickets/03_client/TDD-022_ChatWebSocketClient.md
+    - Repository:
+      - 12_Tickets/04_repository/TDD-030_PrematchCommentRepository.md
+      - 12_Tickets/04_repository/TDD-031_LiveChatRepository.md
+    - UseCase:
+      - 12_Tickets/05_usecase/TDD-040_ReloadCommentListUseCase.md
+      - 12_Tickets/05_usecase/TDD-041_PublishCommentUseCase.md
+      - 12_Tickets/05_usecase/TDD-042_ToggleLikeUseCase.md
+      - 12_Tickets/05_usecase/TDD-043_LoadRepliesUseCase.md
+      - 12_Tickets/05_usecase/TDD-044_NavigateToProfileUseCase.md
+      - 12_Tickets/05_usecase/TDD-045_SendChatMessageUseCase.md
+      - 12_Tickets/05_usecase/TDD-046_JoinChatroomUseCase.md
+      - 12_Tickets/05_usecase/TDD-047_LeaveChatroomUseCase.md
+      - 12_Tickets/05_usecase/TDD-048_BlockUserUseCase.md
+    - Feature:
+      - 12_Tickets/06_feature/TDD-050_PrematchCommentFeature.md
+      - 12_Tickets/06_feature/TDD-051_LiveChatFeature.md
+    - View:
+      - 12_Tickets/07_view/TDD-060_PrematchCommentView.md
+      - 12_Tickets/07_view/TDD-061_LiveDetailView.md
+
+# 額外配置
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com
+
