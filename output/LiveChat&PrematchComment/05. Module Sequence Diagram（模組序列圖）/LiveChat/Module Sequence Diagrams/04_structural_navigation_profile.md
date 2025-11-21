@@ -28,7 +28,26 @@
 | **1. 點擊用戶名稱** | 1. 用戶點擊聊天室中其他用戶的名稱<br>2. 顯示操作選單（含「個人主頁」「Block this user」） |
 | **2. 跳轉個人主頁** | 1. 用戶選擇「Go to Profile」<br>2. Feature 呼叫 NavigateToProfileUseCase<br>3. UseCase 透過 PersonalPageAdapter Protocol 執行路由跳轉 |
 
-## 序列圖
+## 場景序列圖（原始業務流程）
+
+以下為原始業務流程的序列圖，展示從業務角度的完整流程：
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant MainApp as Main App
+
+    User->>MainApp: 點擊使用者名稱及 Avatar
+
+    MainApp->>MainApp: UIViewController+routeToDestination.route(to destination: .personal)
+    note over MainApp: 透過 routeToDestination 跳轉到 User Profile Page
+    MainApp-->>User: 顯示該使用者的個人主頁畫面
+```
+
+## 模組序列圖（架構設計）
+
+以下為轉換後的模組序列圖，展示 Clean Architecture 各層級的互動：
 
 ```mermaid
 sequenceDiagram

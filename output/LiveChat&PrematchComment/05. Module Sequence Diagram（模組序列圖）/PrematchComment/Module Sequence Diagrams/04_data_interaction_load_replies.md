@@ -31,7 +31,33 @@
 | **2. 分頁載入回覆** | 1. 每次最多載入 5 筆回覆<br>2. 使用 cursor 機制追蹤分頁位置 |
 | **3. 顯示「Show more replies」按鈕** | 1. 有超過 5 筆回覆時顯示按鈕<br>2. 不足 5 筆回覆時隱藏按鈕<br>3. 用戶可持續點擊載入更多回覆 |
 
-## 序列圖
+## 場景序列圖（原始業務流程）
+
+以下為原始業務流程的序列圖，展示從業務角度的完整流程：
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant App
+  participant Server as Server
+
+  User->>App: 點擊 12 replies
+  loop 每次最多 5 筆
+    App->>Server: GET /chat/match/comment/replies
+    Server-->>App: replies[<=5], nextCursor?
+    alt 有超過5筆
+      App-->>User: 顯示 Show more replies
+      User->>App: 點擊 Show more replies
+    else 不足5筆
+      App-->>User: 隱藏 Show more replies
+    end
+  end
+```
+
+## 模組序列圖（架構設計）
+
+以下為轉換後的模組序列圖，展示 Clean Architecture 各層級的互動：
 
 ```mermaid
 sequenceDiagram
