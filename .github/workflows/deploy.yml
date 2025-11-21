@@ -36,10 +36,16 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
+      - name: Verify files
+        run: |
+          ls -la output/
+          ls -la output/LiveChat&PrematchComment/ | head -10
+          test -f output/mkdocs.yml && echo "✓ mkdocs.yml found" || echo "✗ mkdocs.yml NOT found"
+      
       - name: Build with MkDocs
         run: |
           cd output
-          mkdocs build
+          mkdocs build --verbose
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
