@@ -1,0 +1,260 @@
+# BE API Spec 範本（OpenAPI 3.0 YAML 格式）
+# 強烈建議使用 OpenAPI 3.0 標準格式
+
+openapi: 3.0.0
+info:
+  title: "{Feature名稱} API"
+  version: "1.0.0"
+  description: "{API 描述}"
+  contact:
+    name: "Backend Team"
+    email: "backend@example.com"
+
+servers:
+  - url: "https://api.example.com/v1"
+    description: "Production server"
+  - url: "https://staging-api.example.com/v1"
+    description: "Staging server"
+
+tags:
+  - name: "Comments"
+    description: "評論相關 API"
+  - name: "Chat"
+    description: "聊天相關 API"
+
+paths:
+  /chat/match/comment/popular:
+    get:
+      tags:
+        - "Comments"
+      summary: "取得熱門評論列表"
+      description: "根據 Like 數排序的評論列表"
+      operationId: "getPopularComments"
+      parameters:
+        - name: refId
+          in: path
+          required: true
+          description: "賽事 ID"
+          schema:
+            type: string
+            example: "match_123"
+        - name: cursor
+          in: query
+          required: false
+          description: "分頁游標"
+          schema:
+            type: string
+            nullable: true
+            example: "cursor_abc123"
+        - name: limit
+          in: query
+          required: false
+          description: "每頁數量"
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: "成功取得評論列表"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentListResponse'
+              examples:
+                success:
+                  value:
+                    comments:
+                      - id: "comment_1"
+                        content: "這是一條評論"
+                        authorId: "user_1"
+                        authorName: "User1"
+                        likeCount: 10
+                        replyCount: 5
+                        createdAt: "2024-01-01T00:00:00Z"
+                    nextCursor: "cursor_abc123"
+        '400':
+          description: "請求參數錯誤"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: "未授權"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "伺服器錯誤"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /chat/match/comment:
+    post:
+      tags:
+        - "Comments"
+      summary: "發表評論"
+      description: "發表新的評論或回覆"
+      operationId: "createComment"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+            examples:
+              comment:
+                value:
+                  refId: "match_123"
+                  content: "這是一條評論"
+                  parentId: null
+              reply:
+                value:
+                  refId: "match_123"
+                  content: "這是一條回覆"
+                  parentId: "comment_1"
+      responses:
+        '201':
+          description: "評論建立成功"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDTO'
+        '400':
+          description: "請求參數錯誤"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: "未授權"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "伺服器錯誤"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CommentDTO:
+      type: object
+      required:
+        - id
+        - content
+        - authorId
+        - authorName
+        - likeCount
+        - replyCount
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: "評論 ID"
+          example: "comment_1"
+        content:
+          type: string
+          description: "評論內容"
+          example: "這是一條評論"
+          maxLength: 500
+        authorId:
+          type: string
+          description: "作者 ID"
+          example: "user_1"
+        authorName:
+          type: string
+          description: "作者名稱（nickname）"
+          example: "User1"
+        likeCount:
+          type: integer
+          description: "Like 數量"
+          example: 10
+          minimum: 0
+        replyCount:
+          type: integer
+          description: "回覆數量"
+          example: 5
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+          description: "建立時間"
+          example: "2024-01-01T00:00:00Z"
+        parentId:
+          type: string
+          nullable: true
+          description: "父評論 ID（如果是回覆）"
+          example: "comment_1"
+
+    CommentListResponse:
+      type: object
+      required:
+        - comments
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentDTO'
+        nextCursor:
+          type: string
+          nullable: true
+          description: "下一頁游標"
+          example: "cursor_abc123"
+
+    CreateCommentRequest:
+      type: object
+      required:
+        - refId
+        - content
+      properties:
+        refId:
+          type: string
+          description: "賽事 ID"
+          example: "match_123"
+        content:
+          type: string
+          description: "評論內容"
+          example: "這是一條評論"
+          maxLength: 500
+        parentId:
+          type: string
+          nullable: true
+          description: "父評論 ID（如果是回覆）"
+          example: "comment_1"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: "錯誤代碼"
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: "錯誤訊息"
+              example: "評論內容不能為空"
+

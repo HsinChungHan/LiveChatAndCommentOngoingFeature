@@ -57,7 +57,16 @@
 
 #### 1.1 PRD（Product Requirements Document）
 
-**文件格式**：Markdown / Word / Confluence
+**推薦文件格式**：
+- ✅ **YAML**（推薦）：結構化、易於 AI 解析、版本控制友好
+- ✅ **Markdown**：易於閱讀和編輯
+- ⚠️ **Word / PDF**：不推薦，難以自動化處理
+
+**為什麼推薦 YAML**：
+- ✅ 結構化格式，易於 AI 解析和提取資訊
+- ✅ 版本控制友好（Git diff 清晰）
+- ✅ 可以自動驗證格式和完整性
+- ✅ 易於轉換為其他格式
 
 **必備內容**：
 
@@ -133,7 +142,17 @@
 
 #### 2.1 API Spec（API 規格文件）
 
-**文件格式**：OpenAPI 3.0 / Swagger / Markdown
+**推薦文件格式**：
+- ✅ **OpenAPI 3.0 (YAML)**（強烈推薦）：標準格式、結構化、易於 AI 解析
+- ✅ **OpenAPI 3.0 (JSON)**：與 YAML 等價，但 YAML 更易讀
+- ⚠️ **Swagger 2.0**：舊版格式，建議升級到 OpenAPI 3.0
+- ⚠️ **Markdown**：不推薦，難以自動化處理
+
+**為什麼推薦 OpenAPI 3.0 YAML**：
+- ✅ 業界標準格式，工具支援完善
+- ✅ 結構化格式，易於 AI 解析和驗證
+- ✅ 可以自動生成 API Client 代碼
+- ✅ 版本控制友好
 
 **必備內容**：
 
@@ -279,7 +298,17 @@ wss://api.example.com/chat/websocket/web-chat
 
 #### 3.1 UI/UX Design Spec
 
-**文件格式**：Figma / Sketch / Markdown
+**推薦文件格式**：
+- ✅ **YAML + Figma**（推薦）：YAML 提供結構化規格，Figma 提供視覺設計稿
+- ✅ **JSON + Figma**：與 YAML 等價
+- ✅ **Markdown + Figma**：Markdown 提供文字描述，Figma 提供視覺設計稿
+- ⚠️ **僅 Figma / Sketch**：不推薦，難以自動化提取結構化資訊
+
+**為什麼推薦 YAML + Figma**：
+- ✅ YAML 提供結構化的 UI 規格（狀態、互動、元件），易於 AI 解析
+- ✅ Figma 提供視覺設計稿，便於設計師和開發者查看
+- ✅ 兩者結合：結構化規格 + 視覺參考
+- ✅ 版本控制友好（YAML 可以 Git 追蹤）
 
 **必備內容**：
 
@@ -832,21 +861,83 @@ P0 / P1 / P2 / P3
 
 ---
 
+## 文件格式建議總結
+
+### 推薦格式對照表
+
+| 角色 | 推薦格式 | 替代格式 | 不推薦格式 |
+|------|---------|---------|-----------|
+| **PM** | **YAML** | Markdown | Word / PDF |
+| **BE** | **OpenAPI 3.0 (YAML)** | OpenAPI 3.0 (JSON) | Markdown / Word |
+| **Designer** | **YAML + Figma** | JSON + Figma / Markdown + Figma | 僅 Figma / Sketch |
+
+### 為什麼選擇結構化格式？
+
+1. **AI 解析效率**
+   - 結構化格式（YAML/JSON）易於 AI 解析和提取資訊
+   - 非結構化格式（Word/PDF）需要額外的 OCR 或解析步驟
+
+2. **版本控制**
+   - YAML/JSON 可以完整追蹤變更（Git diff）
+   - Word/PDF 難以追蹤具體變更內容
+
+3. **自動化處理**
+   - 可以自動驗證格式和完整性
+   - 可以自動轉換為其他格式
+   - 可以自動生成文檔
+
+4. **協作效率**
+   - 結構化格式易於多人協作和審查
+   - 可以建立範本和檢查清單
+
+---
+
 ## 附錄：文件範本下載
 
 ### PM PRD 範本
-- [PRD_Template.md](./templates/PRD_Template.md)（待建立）
+- ✅ [PRD_Template.yaml](./templates/PRD_Template.yaml) - YAML 格式（推薦）
+- [PRD_Template.md](./templates/PRD_Template.md) - Markdown 格式（待建立）
 
 ### BE API Spec 範本
-- [API_Spec_Template.yaml](./templates/API_Spec_Template.yaml)（待建立）
+- ✅ **使用 OpenAPI 3.0 標準格式**（參考 [OpenAPI Specification](https://swagger.io/specification/)）
+- 範例：參考 `Input/` 目錄下的 `flow_spec.yaml` 中的 `api_endpoints` 結構
 
 ### Designer UI/UX Spec 範本
-- [UI_UX_Spec_Template.md](./templates/UI_UX_Spec_Template.md)（待建立）
+- ✅ [UI_UX_Spec_Template.yaml](./templates/UI_UX_Spec_Template.yaml) - YAML 格式（推薦）
+- [UI_UX_Spec_Template.md](./templates/UI_UX_Spec_Template.md) - Markdown 格式（待建立）
 
 ### Client Side RD Input 資料範本
 - [mermaid_template.md](./templates/mermaid_template.md)（待建立）
 - [description_template.md](./templates/description_template.md)（待建立）
 - [flow_spec_template.yaml](./templates/flow_spec_template.yaml)（待建立）
+
+---
+
+## 文件格式轉換工具
+
+### PM PRD：Word/PDF → YAML
+
+如果 PM 提供的是 Word 或 PDF 格式，可以使用以下方式轉換：
+
+1. **手動轉換**：根據 YAML 範本手動填寫
+2. **AI 輔助轉換**：使用 AI 工具將 Word/PDF 內容轉換為 YAML 格式
+3. **建立轉換腳本**：開發自動化腳本（如需要）
+
+### BE API Spec：Markdown → OpenAPI 3.0
+
+如果 BE 提供的是 Markdown 格式的 API Spec，建議：
+
+1. **要求 BE 提供 OpenAPI 3.0 格式**（最佳）
+2. **手動轉換**：根據 OpenAPI 3.0 範本手動填寫
+3. **使用工具**：使用 [Swagger Editor](https://editor.swagger.io/) 等工具協助轉換
+
+### Designer UI/UX Spec：僅 Figma → YAML + Figma
+
+如果 Designer 只提供 Figma 設計稿，建議：
+
+1. **補充 YAML 規格**：根據 Figma 設計稿，填寫 YAML 規格文件
+2. **AI 輔助提取**：使用 AI 工具從 Figma 設計稿中提取結構化資訊
+3. **協作填寫**：與 Designer 協作，共同填寫 YAML 規格文件
 
 ---
 

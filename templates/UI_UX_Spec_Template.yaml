@@ -1,0 +1,248 @@
+# Designer UI/UX Spec 範本（YAML 格式）
+# 建議使用 YAML 格式，便於 AI 解析和版本控制
+
+feature:
+  name: "PrematchComment"
+  design_system_link: "https://figma.com/..."  # Figma 設計稿連結
+
+screens:
+  - screen_name: "PrematchCommentPage"
+    description: "賽前評論頁面"
+    states:
+      - state: "loading"
+        description: "載入中狀態"
+        ui_elements:
+          - element: "LoadingIndicator"
+            position: "center"
+            style: "spinner"
+      - state: "empty"
+        description: "無評論狀態"
+        ui_elements:
+          - element: "EmptyState"
+            message: "尚無評論"
+            icon: "comment_icon"
+      - state: "error"
+        description: "錯誤狀態"
+        ui_elements:
+          - element: "ErrorBanner"
+            message: "載入失敗，請稍後再試"
+            action_button: "重試"
+      - state: "success"
+        description: "正常顯示狀態"
+        ui_elements:
+          - element: "CommentList"
+            layout: "vertical"
+            spacing: 16
+          - element: "TabBar"
+            tabs: ["Top", "Newest"]
+            default_tab: "Top"
+          - element: "RefreshButton"
+            position: "top_right"
+            icon: "refresh_icon"
+
+interactions:
+  - interaction_name: "發表評論流程"
+    trigger: "用戶點擊輸入框"
+    steps:
+      - step: 1
+        action: "點擊輸入框"
+        ui_change: "鍵盤彈出"
+        animation: "slide_up"
+        duration: 0.3
+      - step: 2
+        action: "輸入評論內容"
+        ui_change: "輸入框顯示文字"
+        validation:
+          - "最大長度：500 字"
+          - "即時顯示字數"
+      - step: 3
+        action: "點擊送出按鈕"
+        ui_change: "顯示 Loading 狀態"
+        loading_indicator: "按鈕內顯示 spinner"
+      - step: 4
+        action: "評論送出成功"
+        ui_change: "評論出現在列表最上方"
+        animation: "highlight"
+        highlight_duration: 3
+        highlight_color: "#FFD700"
+      - step: 5
+        action: "評論送出失敗"
+        ui_change: "顯示錯誤 Toast"
+        toast_message: "留言失敗，請稍後再試"
+        toast_duration: 3
+
+  - interaction_name: "點讚流程"
+    trigger: "用戶點擊 Like 按鈕"
+    steps:
+      - step: 1
+        action: "點擊 Like 按鈕"
+        ui_change: "立即更新 UI（Optimistic UI）"
+        changes:
+          - "Like 數 +1"
+          - "按鈕變為已點讚狀態（紅色）"
+        animation: "scale"
+        duration: 0.2
+      - step: 2
+        action: "向後端發送請求"
+        ui_change: "無變化（已在步驟 1 更新）"
+      - step: 3
+        action: "請求成功"
+        ui_change: "維持已點讚狀態"
+      - step: 4
+        action: "請求失敗"
+        ui_change: "回滾 UI 狀態"
+        changes:
+          - "Like 數 -1"
+          - "按鈕變為未點讚狀態（灰色）"
+        error_message: "點讚失敗，請稍後再試"
+
+components:
+  - component_name: "CommentCard"
+    description: "評論卡片"
+    properties:
+      width: "100%"
+      padding: 16
+      corner_radius: 8
+      shadow: "light"
+      background_color: "#FFFFFF"
+    elements:
+      - element: "Avatar"
+        size: 40
+        position: "left"
+      - element: "AuthorName"
+        font_size: 16
+        font_weight: "bold"
+        color: "#000000"
+      - element: "Content"
+        font_size: 14
+        color: "#333333"
+        line_height: 20
+        max_lines: null
+      - element: "LikeButton"
+        size: 24
+        position: "right"
+        states:
+          - state: "unliked"
+            icon: "heart_outline"
+            color: "#999999"
+          - state: "liked"
+            icon: "heart_filled"
+            color: "#FF0000"
+      - element: "ReplyButton"
+        size: 24
+        position: "right"
+        icon: "reply"
+        color: "#999999"
+
+  - component_name: "InputField"
+    description: "評論輸入框"
+    properties:
+      height: 44
+      padding: 12
+      corner_radius: 8
+      border_width: 1
+      border_color: "#E0E0E0"
+    states:
+      - state: "normal"
+        border_color: "#E0E0E0"
+        background_color: "#FFFFFF"
+      - state: "focused"
+        border_color: "#007AFF"
+        background_color: "#FFFFFF"
+      - state: "error"
+        border_color: "#FF0000"
+        background_color: "#FFF5F5"
+    placeholder: "輸入評論..."
+    max_length: 500
+    show_character_count: true
+
+animations:
+  - animation_name: "comment_highlight"
+    description: "評論送出後的 highlight 動畫"
+    duration: 3
+    effect: "background_color_change"
+    from_color: "#FFFFFF"
+    to_color: "#FFD700"
+    easing: "ease_in_out"
+
+  - animation_name: "like_button_scale"
+    description: "Like 按鈕點擊動畫"
+    duration: 0.2
+    effect: "scale"
+    scale_from: 1.0
+    scale_to: 1.2
+    easing: "ease_out"
+
+  - animation_name: "list_fade_in"
+    description: "列表載入淡入動畫"
+    duration: 0.3
+    effect: "fade_in"
+    from_opacity: 0
+    to_opacity: 1
+    easing: "ease_in"
+
+error_states:
+  - error_type: "network_error"
+    ui_display: "Toast"
+    message: "網路連線失敗，請稍後再試"
+    duration: 3
+    position: "bottom"
+    style: "error"
+
+  - error_type: "validation_error"
+    ui_display: "InlineError"
+    message: "評論內容不能為空"
+    position: "below_input"
+    style: "error"
+
+  - error_type: "server_error"
+    ui_display: "Alert"
+    title: "錯誤"
+    message: "伺服器錯誤，請稍後再試"
+    actions: ["確定", "重試"]
+
+responsive_design:
+  - breakpoint: "iPhone"
+    screen_width: "375px"
+    adjustments:
+      - component: "CommentCard"
+        padding: 12
+      - component: "InputField"
+        height: 40
+
+  - breakpoint: "iPad"
+    screen_width: "768px"
+    adjustments:
+      - component: "CommentCard"
+        max_width: "600px"
+        margin: "auto"
+
+design_tokens:
+  colors:
+    primary: "#007AFF"
+    secondary: "#5856D6"
+    error: "#FF0000"
+    success: "#34C759"
+    background: "#FFFFFF"
+    text_primary: "#000000"
+    text_secondary: "#999999"
+  
+  typography:
+    font_family: "SF Pro Display"
+    font_sizes:
+      large: 18
+      medium: 16
+      small: 14
+      tiny: 12
+    font_weights:
+      bold: 700
+      medium: 500
+      regular: 400
+  
+  spacing:
+    xs: 4
+    sm: 8
+    md: 16
+    lg: 24
+    xl: 32
+

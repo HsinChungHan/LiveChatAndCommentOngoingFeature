@@ -1,0 +1,119 @@
+# PM PRD 範本（YAML 格式）
+# 建議使用 YAML 格式，便於 AI 解析和版本控制
+
+feature:
+  name: "PrematchComment"  # Feature 名稱
+  description: "提供賽事前評論功能，讓用戶可以在賽事開始前發表評論和互動"
+  priority: "P0"  # P0/P1/P2/P3
+  target_users: ["所有註冊用戶"]
+  use_cases:
+    - "用戶在賽事開始前發表評論"
+    - "用戶點讚其他用戶的評論"
+    - "用戶回覆其他用戶的評論"
+
+user_stories:
+  - role: "用戶"
+    action: "在賽事開始前發表評論"
+    goal: "與其他用戶互動"
+    priority: "P0"
+  - role: "用戶"
+    action: "點讚其他用戶的評論"
+    goal: "表達對評論的認同"
+    priority: "P1"
+  - role: "用戶"
+    action: "回覆其他用戶的評論"
+    goal: "與其他用戶討論"
+    priority: "P1"
+
+functional_specs:
+  - name: "評論列表"
+    description: "顯示熱門評論和最新評論"
+    features:
+      - "顯示熱門評論（Top tab）"
+      - "顯示最新評論（Newest tab）"
+      - "支援下拉刷新"
+      - "支援分頁載入"
+    priority: "P0"
+  - name: "發表評論"
+    description: "用戶可以發表評論和回覆"
+    features:
+      - "點擊輸入框觸發登入檢查"
+      - "檢查 nickname 是否存在"
+      - "支援發表評論"
+      - "支援回覆評論"
+    priority: "P0"
+  - name: "點讚功能"
+    description: "用戶可以點讚評論"
+    features:
+      - "點擊 Like 按鈕"
+      - "登入檢查"
+      - "Optimistic UI 更新"
+    priority: "P1"
+
+user_flows:
+  - flow_name: "發表評論流程"
+    steps:
+      - step: 1
+        action: "進入 Race Detail Page"
+        actor: "User"
+      - step: 2
+        action: "點擊進入 Prematch Comment Page"
+        actor: "User"
+      - step: 3
+        action: "查看評論列表（預設 Top tab）"
+        actor: "User"
+      - step: 4
+        action: "點擊輸入框"
+        actor: "User"
+        conditions:
+          - "如果未登入，跳轉到登入頁面"
+      - step: 5
+        action: "輸入評論內容"
+        actor: "User"
+      - step: 6
+        action: "點擊送出"
+        actor: "User"
+        conditions:
+          - "如果沒有 nickname，先建立 nickname"
+      - step: 7
+        action: "評論出現在列表最上方"
+        actor: "System"
+
+business_rules:
+  - rule: "未登入用戶需先登入才能發表評論"
+    type: "validation"
+    priority: "P0"
+  - rule: "發表評論前需檢查 nickname 是否存在"
+    type: "validation"
+    priority: "P0"
+  - rule: "如果沒有 nickname，需先建立 nickname"
+    type: "workflow"
+    priority: "P0"
+  - rule: "評論列表支援分頁載入（每次最多 5 筆）"
+    type: "performance"
+    priority: "P1"
+  - rule: "點讚使用 Optimistic UI，立即更新 UI"
+    type: "ux"
+    priority: "P1"
+
+acceptance_criteria:
+  - criterion: "用戶可以成功發表評論"
+    test_cases:
+      - "已登入且有 nickname 的用戶可以發表評論"
+      - "已登入但無 nickname 的用戶會先建立 nickname 再發表評論"
+      - "未登入用戶會先登入再發表評論"
+  - criterion: "用戶可以點讚評論"
+    test_cases:
+      - "已登入用戶可以點讚評論"
+      - "點讚後 Like 數立即更新（Optimistic UI）"
+      - "未登入用戶會先登入再點讚"
+  - criterion: "用戶可以回覆評論"
+    test_cases:
+      - "用戶可以回覆其他用戶的評論"
+      - "回覆列表支援分頁載入"
+
+notes:
+  - "個人資訊 API 目前為待定（TBD），需與 Eason 確認"
+  - "nickname 建立流程使用 FComSharedFlow Package"
+  - "評論列表預設顯示 Top tab"
+
