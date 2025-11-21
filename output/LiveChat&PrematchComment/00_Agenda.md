@@ -15,7 +15,7 @@
 - External Package 整合架構
 
 **相關文件**：
-- [Architecture Section](../02_Architecture/01_clean_architecture_diagram.md)
+- [Architecture Section](./02_Architecture/01_clean_architecture_diagram.md)
 
 ---
 
@@ -26,7 +26,7 @@
 - 按功能分類組織（Data Initialization、Data Interaction、Structural Navigation）
 
 **相關文件**：
-- [Module Sequence Diagram Section](../05.%20Module%20Sequence%20Diagram（模組序列圖）/)
+- [Module Sequence Diagram Section](./05.%20Module%20Sequence%20Diagram（模組序列圖）/)
 
 #### 2-1. 當 event status 發生變化
 
@@ -36,7 +36,7 @@
 - 跨 Package 通訊
 
 **相關文件**：
-- [Event Status 訂閱與通知流程](../05.%20Module%20Sequence%20Diagram（模組序列圖）/PrematchComment/Module%20Sequence%20Diagrams/06_event_status_subscription.md)
+- [Event Status 訂閱與通知流程](./05.%20Module%20Sequence%20Diagram（模組序列圖）/PrematchComment/Module%20Sequence%20Diagrams/06_event_status_subscription.md)
 
 #### 2-2. 確認用戶是否登入、用戶創建 nickName、用戶點擊 avatar 後跳轉到 User Profile Page
 
@@ -46,9 +46,9 @@
 - 用戶頭像點擊跳轉流程
 
 **相關文件**：
-- [聊天室訊息傳遞與滾動加載](../05.%20Module%20Sequence%20Diagram（模組序列圖）/LiveChat/Module%20Sequence%20Diagrams/02_data_interaction_send_message.md)（登入與 nickname 檢查）
-- [跳轉個人主頁流程 - LiveChat](../05.%20Module%20Sequence%20Diagram（模組序列圖）/LiveChat/Module%20Sequence%20Diagrams/04_structural_navigation_profile.md)
-- [跳轉個人主頁流程 - PrematchComment](../05.%20Module%20Sequence%20Diagram（模組序列圖）/PrematchComment/Module%20Sequence%20Diagrams/05_structural_navigation_profile.md)
+- [聊天室訊息傳遞與滾動加載](./05.%20Module%20Sequence%20Diagram（模組序列圖）/LiveChat/Module%20Sequence%20Diagrams/02_data_interaction_send_message.md)（登入與 nickname 檢查）
+- [跳轉個人主頁流程 - LiveChat](./05.%20Module%20Sequence%20Diagram（模組序列圖）/LiveChat/Module%20Sequence%20Diagrams/04_structural_navigation_profile.md)
+- [跳轉個人主頁流程 - PrematchComment](./05.%20Module%20Sequence%20Diagram（模組序列圖）/PrematchComment/Module%20Sequence%20Diagrams/05_structural_navigation_profile.md)
 
 #### 2-3. 用戶從 In-Site Message 跳轉到 Match Detail Page 後開啟 Prematch Comment Page
 
@@ -57,7 +57,7 @@
 - Prematch Comment Page 初始化流程
 
 **相關文件**：
-- [User 從 In-Site message 跳轉到 Prematch Comment Page](../05.%20Module%20Sequence%20Diagram（模組序列圖）/PrematchComment/Module%20Sequence%20Diagrams/01_data_initialization_refresh.md)
+- [User 從 In-Site message 跳轉到 Prematch Comment Page](./05.%20Module%20Sequence%20Diagram（模組序列圖）/PrematchComment/Module%20Sequence%20Diagrams/01_data_initialization_refresh.md)
 
 ---
 
