@@ -71,6 +71,42 @@ Domain Model → API → Client → Repository → UseCase → Feature → View
 | **所屬 Feature** | 所屬功能 | `PrematchComment` |
 | **依賴 Ticket** | 依賴的 Ticket ID | `TDD-001, TDD-002` |
 
+### 2.1.1 Ticket 中英版本要求
+
+**所有 Ticket 文件必須提供中英雙語版本**，格式如下：
+
+- **標題**：使用 `中文標題 / English Title` 格式
+- **表格欄位**：使用 `中文欄位名 / English Field Name` 格式
+- **表格值**：如果值包含中文，使用 `中文值 / English Value` 格式
+- **段落文字**：使用 `中文段落 / English Paragraph` 格式
+- **列表項**：使用 `中文項目 / English Item` 格式
+
+**範例**：
+
+```markdown
+## Ticket 資訊 / Ticket Information
+
+| 欄位 / Field | 值 / Value |
+|------|-----|
+| **標題** / **Title** | 實作 Comment Entity / Implement Comment Entity |
+| **類型** / **Type** | Domain Model |
+| **估時（Senior iOS Engineer + AI 輔助）** / **Estimation (Senior iOS Engineer + AI Assisted)** | 標準：0.3 天<br/>最嚴厲：0.2 天 / Standard: 0.3 days<br/>Most Stringent: 0.2 days |
+
+## 描述 / Description
+
+定義 Comment Entity Domain Model。 / Define Comment Entity Domain Model。
+
+## 需求 / Requirements
+
+1. 定義 Comment 結構 / Define Comment Structure
+2. 實作 Identifiable 和 Equatable / Implement Identifiable and Equatable
+```
+
+**注意事項**：
+- 技術術語（如 Entity、UseCase、Repository）保持英文不變
+- 專有名詞（如 PrematchComment、LiveChat）保持英文不變
+- 數字、代碼、路徑等保持原樣
+
 ### 2.2 Ticket 詳細內容
 
 #### Domain Model Ticket
@@ -428,7 +464,21 @@ Ticket 生成應從以下 TDD 文件提取資訊：
 Ticket 應輸出為：
 
 - **Markdown 格式**：`output/{Feature}/12_Tickets/{ticket_id}_{module_name}.md`
+  - **必須提供中英雙語版本**：所有標題、表格、段落、列表都應包含中英文對照
+  - 格式：`中文內容 / English Content`
 - **JSON 格式**（可選）：`output/{Feature}/12_Tickets/tickets.json`
+
+### 4.3.1 中英版本生成規則
+
+1. **自動生成**：使用 `scripts/create_bilingual_tickets.py` 腳本自動為所有 Ticket 文件生成中英版本
+2. **翻譯原則**：
+   - 技術術語保持英文（Entity、UseCase、Repository 等）
+   - 專有名詞保持英文（PrematchComment、LiveChat 等）
+   - 動詞和描述性文字需要翻譯（實作 → Implement、定義 → Define）
+3. **格式要求**：
+   - 使用 `/` 分隔中英文
+   - 保持原有 Markdown 格式
+   - 表格欄位和值都需要中英對照
 
 ---
 

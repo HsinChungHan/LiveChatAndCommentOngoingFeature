@@ -990,11 +990,11 @@ P0 / P1 / P2 / P3
 
 ## 相關文件
 
-- [TDD Input 資料處理規範](./TDD_rules/tdd_input_processing_rules.md)
-- [TDD Ticket 生成與估時規範](./TDD_rules/tdd_ticket_generation_and_estimation.md)
-- [TDD Domain, API, Test & TDD Structure](./TDD_rules/tdd_domain_api_test_and_structure.md)
-- [TDD Sequence & Mermaid Rules](./TDD_rules/tdd_sequence_and_mermaid_rules.md)
-- [Client Side RD 工作流程](./TDD_rules/tdd_workflow_from_prd_to_tdd.md)
+- [TDD Input 資料處理規範](../TDD_rules/tdd_input_processing_rules.md)
+- [TDD Ticket 生成與估時規範](../TDD_rules/tdd_ticket_generation_and_estimation.md)
+- [TDD Domain, API, Test & TDD Structure](../TDD_rules/tdd_domain_api_test_and_structure.md)
+- [TDD Sequence & Mermaid Rules](../TDD_rules/tdd_sequence_and_mermaid_rules.md)
+- [Client Side RD 工作流程](../TDD_rules/tdd_workflow_from_prd_to_tdd.md)
 
 ---
 
@@ -1068,21 +1068,21 @@ P0 / P1 / P2 / P3
 ## 附錄：文件範本下載
 
 ### PM PRD 範本
-- ✅ [PRD_Template.yaml](./templates/PRD_Template.yaml) - YAML 格式（推薦）
-- [PRD_Template.md](./templates/PRD_Template.md) - Markdown 格式（待建立）
+- ✅ [PRD_Template.yaml](../templates/PRD_Template.yaml) - YAML 格式（推薦）
+- [PRD_Template.md](../templates/PRD_Template.md) - Markdown 格式（待建立）
 
 ### BE API Spec 範本
 - ✅ **使用 OpenAPI 3.0 標準格式**（參考 [OpenAPI Specification](https://swagger.io/specification/)）
 - 範例：參考 `Input/` 目錄下的 `flow_spec.yaml` 中的 `api_endpoints` 結構
 
 ### Designer UI/UX Spec 範本
-- ✅ [UI_UX_Spec_Template.yaml](./templates/UI_UX_Spec_Template.yaml) - YAML 格式（推薦）
-- [UI_UX_Spec_Template.md](./templates/UI_UX_Spec_Template.md) - Markdown 格式（待建立）
+- ✅ [UI_UX_Spec_Template.yaml](../templates/UI_UX_Spec_Template.yaml) - YAML 格式（推薦）
+- [UI_UX_Spec_Template.md](../templates/UI_UX_Spec_Template.md) - Markdown 格式（待建立）
 
 ### Client Side RD Input 資料範本
-- [mermaid_template.md](./templates/mermaid_template.md)（待建立）
-- [description_template.md](./templates/description_template.md)（待建立）
-- [flow_spec_template.yaml](./templates/flow_spec_template.yaml)（待建立）
+- [mermaid_template.md](../templates/mermaid_template.md)（待建立）
+- [description_template.md](../templates/description_template.md)（待建立）
+- [flow_spec_template.yaml](../templates/flow_spec_template.yaml)（待建立）
 
 ---
 
