@@ -2,8 +2,8 @@ site_name: LiveChat & PrematchComment TDD
 site_description: Technical Design Document for LiveChat and PrematchComment Features
 site_author: TDD Team
 
-# 文件目錄設定（使用當前目錄）
-docs_dir: .
+# 文件目錄設定
+docs_dir: docs
 site_dir: site
 
 # 主題配置
@@ -95,6 +95,7 @@ nav:
     - 11_Risks & Questions/01_risks_questions.md
   - Tickets:
     - 12_Tickets/README.md
+    - 12_Tickets/ticket_timeline.md
     - Domain Model:
       - 12_Tickets/01_domain_model/TDD-001_Comment_Entity.md
       - 12_Tickets/01_domain_model/TDD-002_CommentMeta_Entity.md
