@@ -129,6 +129,23 @@ nav:
     - View:
       - 12_Tickets/07_view/TDD-060_PrematchCommentView.md
       - 12_Tickets/07_view/TDD-061_LiveDetailView.md
+  - Cursor Commands:
+    - 17_Cursor_Commands/README.md
+    - 17_Cursor_Commands/WORKFLOW_GUIDE.md
+    - 17_Cursor_Commands/QUICK_REFERENCE.md
+    - Daily Workflow:
+      - 17_Cursor_Commands/daily-start.md
+      - 17_Cursor_Commands/generate-daily-plan.md
+      - 17_Cursor_Commands/create-daily-log.md
+      - 17_Cursor_Commands/daily-end.md
+    - Development Workflow:
+      - 17_Cursor_Commands/update-implementation-status.md
+      - 17_Cursor_Commands/update-changelog.md
+      - 17_Cursor_Commands/check-tdd-consistency.md
+      - 17_Cursor_Commands/deploy-tdd-to-mkdocs.md
+    - Review & Summary:
+      - 17_Cursor_Commands/review-cursor-conversations.md
+      - 17_Cursor_Commands/summarize-daily-work.md
 
 # 額外配置
 extra:
