@@ -1,0 +1,27 @@
+ticket_id,title,type,feature,jira_key,url,status,created_at,resolved_at,time_spent,original_estimate
+TDD-001,"實作 Comment Entity","Domain Model",PrematchComment,FOOTBALL-9005,https://opennetltd.atlassian.net/browse/FOOTBALL-9005,"完成",2025-11-24T13:22:27.804+0800,2025-11-24T16:05:51.309+0800,,"2h 24m"
+TDD-002,"實作 CommentMeta Entity","Domain Model",PrematchComment,FOOTBALL-9006,https://opennetltd.atlassian.net/browse/FOOTBALL-9006,"完成",2025-11-24T13:22:28.836+0800,2025-11-24T16:05:52.118+0800,,"2h 24m"
+TDD-003,"實作 UserInfo Entity","Domain Model","LiveChat & PrematchComment",FOOTBALL-9007,https://opennetltd.atlassian.net/browse/FOOTBALL-9007,"完成",2025-11-24T13:22:29.892+0800,2025-11-24T16:05:53.045+0800,,"2h 24m"
+TDD-004,"實作 Message Entity","Domain Model",LiveChat,FOOTBALL-9008,https://opennetltd.atlassian.net/browse/FOOTBALL-9008,"完成",2025-11-24T13:22:30.943+0800,2025-11-24T16:05:53.914+0800,,"2h 24m"
+TDD-005,"實作 ChatroomInfo Entity","Domain Model",LiveChat,FOOTBALL-9009,https://opennetltd.atlassian.net/browse/FOOTBALL-9009,"完成",2025-11-24T13:22:31.951+0800,2025-11-24T16:05:54.748+0800,,"2h 24m"
+TDD-006,"實作 Value Objects（SortMode、Cursor、PagingInfo）","Domain Model","LiveChat & PrematchComment",FOOTBALL-9010,https://opennetltd.atlassian.net/browse/FOOTBALL-9010,"完成",2025-11-24T13:22:32.823+0800,2025-11-24T16:05:55.568+0800,,1d
+TDD-010,"實作 PrematchCommentAPI 定義",API,PrematchComment,FOOTBALL-9011,https://opennetltd.atlassian.net/browse/FOOTBALL-9011,"完成",2025-11-24T13:22:33.664+0800,2025-11-24T16:05:56.512+0800,,1d
+TDD-011,"實作 ChatAPI 定義",API,LiveChat,FOOTBALL-9012,https://opennetltd.atlassian.net/browse/FOOTBALL-9012,"完成",2025-11-24T13:22:34.797+0800,2025-11-24T16:05:57.359+0800,,2d
+TDD-020,"實作 PrematchCommentClient（HTTP）",Client,PrematchComment,FOOTBALL-9013,https://opennetltd.atlassian.net/browse/FOOTBALL-9013,"完成",2025-11-24T13:22:35.864+0800,2025-11-24T16:05:58.409+0800,,2d
+TDD-021,"實作 LiveChatClient（HTTP）",Client,LiveChat,FOOTBALL-9014,https://opennetltd.atlassian.net/browse/FOOTBALL-9014,"完成",2025-11-24T13:22:37.195+0800,2025-11-24T16:05:59.247+0800,,1d
+TDD-022,"實作 ChatWebSocketClient（WebSocket）",Client,LiveChat,FOOTBALL-9015,https://opennetltd.atlassian.net/browse/FOOTBALL-9015,"完成",2025-11-24T13:22:38.279+0800,2025-11-24T16:06:00.108+0800,,1w
+TDD-030,"實作 PrematchCommentRepository",Repository,PrematchComment,FOOTBALL-9016,https://opennetltd.atlassian.net/browse/FOOTBALL-9016,"完成",2025-11-24T13:22:39.328+0800,2025-11-24T16:06:00.962+0800,,2d
+TDD-031,"實作 LiveChatRepository",Repository,LiveChat,FOOTBALL-9017,https://opennetltd.atlassian.net/browse/FOOTBALL-9017,"完成",2025-11-24T13:22:40.128+0800,2025-11-24T16:06:01.823+0800,,3d
+TDD-040,"實作 ReloadCommentListUseCase",UseCase,PrematchComment,FOOTBALL-9018,https://opennetltd.atlassian.net/browse/FOOTBALL-9018,"完成",2025-11-24T13:22:40.946+0800,2025-11-24T16:06:02.725+0800,,2d
+TDD-041,"實作 PublishCommentUseCase",UseCase,PrematchComment,FOOTBALL-9019,https://opennetltd.atlassian.net/browse/FOOTBALL-9019,"完成",2025-11-24T13:22:41.847+0800,2025-11-24T16:06:03.566+0800,,1w
+TDD-042,"實作 ToggleLikeUseCase",UseCase,PrematchComment,FOOTBALL-9020,https://opennetltd.atlassian.net/browse/FOOTBALL-9020,"完成",2025-11-24T13:22:42.841+0800,2025-11-24T16:06:04.365+0800,,2d
+TDD-043,"實作 LoadRepliesUseCase",UseCase,PrematchComment,FOOTBALL-9021,https://opennetltd.atlassian.net/browse/FOOTBALL-9021,"完成",2025-11-24T13:22:43.972+0800,2025-11-24T16:06:05.103+0800,,2d
+TDD-044,"實作 NavigateToProfileUseCase",UseCase,"LiveChat & PrematchComment",FOOTBALL-9022,https://opennetltd.atlassian.net/browse/FOOTBALL-9022,"完成",2025-11-24T13:22:44.943+0800,2025-11-24T16:06:05.895+0800,,1d
+TDD-045,"實作 SendChatMessageUseCase",UseCase,LiveChat,FOOTBALL-9023,https://opennetltd.atlassian.net/browse/FOOTBALL-9023,"完成",2025-11-24T13:22:45.999+0800,2025-11-24T16:06:06.806+0800,,1w
+TDD-046,"實作 JoinChatroomUseCase",UseCase,LiveChat,FOOTBALL-9024,https://opennetltd.atlassian.net/browse/FOOTBALL-9024,"完成",2025-11-24T13:22:46.912+0800,2025-11-24T16:06:07.642+0800,,1w
+TDD-047,"實作 LeaveChatroomUseCase",UseCase,LiveChat,FOOTBALL-9025,https://opennetltd.atlassian.net/browse/FOOTBALL-9025,"完成",2025-11-24T13:22:47.798+0800,2025-11-24T16:06:08.560+0800,,2d
+TDD-048,"實作 BlockUserUseCase",UseCase,LiveChat,FOOTBALL-9026,https://opennetltd.atlassian.net/browse/FOOTBALL-9026,"完成",2025-11-24T13:22:48.862+0800,2025-11-24T16:06:09.558+0800,,1d
+TDD-050,"實作 PrematchCommentFeature（TCA Reducer）",Feature,PrematchComment,FOOTBALL-9027,https://opennetltd.atlassian.net/browse/FOOTBALL-9027,"完成",2025-11-24T13:22:50.026+0800,2025-11-24T16:06:10.471+0800,,3d
+TDD-051,"實作 LiveChatFeature（TCA Reducer）",Feature,LiveChat,FOOTBALL-9028,https://opennetltd.atlassian.net/browse/FOOTBALL-9028,"完成",2025-11-24T13:22:50.991+0800,2025-11-24T16:06:11.253+0800,,1w
+TDD-060,"實作 PrematchCommentView",View,PrematchComment,FOOTBALL-9029,https://opennetltd.atlassian.net/browse/FOOTBALL-9029,"完成",2025-11-24T13:22:51.852+0800,2025-11-24T16:06:12.062+0800,,1w
+TDD-061,"實作 LiveDetailView",View,LiveChat,FOOTBALL-9030,https://opennetltd.atlassian.net/browse/FOOTBALL-9030,"完成",2025-11-24T13:22:52.882+0800,2025-11-24T16:06:12.865+0800,,1w
