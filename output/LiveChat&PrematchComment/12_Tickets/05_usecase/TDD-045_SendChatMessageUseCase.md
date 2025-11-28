@@ -12,6 +12,7 @@
 | **依賴 Ticket** | TDD-031 |
 | **Story Point** | 13 |
 | **估時（Senior iOS Engineer + AI 輔助）** | 標準：5 天<br/>最嚴厲：4 天 |
+| **開發日期 / Development Date** | 2025-12-11 (週四)
 
 ## 描述 / Description
 
@@ -19,19 +20,99 @@
 
 ## 需求 / Requirements
 
-1. 實作 UseCase 商業邏輯 / Implement UseCase 商業Logic
-2. 整合 LiveChatRepository 呼叫 / Integrate LiveChatRepository Call
-3. 實作 Input/Output Model 驗證 / Implement Input/Output Model Validation
-4. 實作 Error Handling / Implement Error Handling
-5. 整合 PersonalPageAdapter Protocol（登入檢查） / Integrate PersonalPageAdapter Protocol(登入檢查)
-6. 整合 FComSharedFlowAdapter Protocol（nickname 建立） / Integrate FComSharedFlowAdapter Protocol(nickname 建立)
+1. 實作 `SendChatMessageUseCase` struct / Implement `SendChatMessageUseCase` struct
+2. 定義 Input/Output Model / Define Input/Output Model
+3. 整合 `LiveChatRepository` 呼叫 / Integrate `LiveChatRepository` call
+4. 整合 `PersonalPageAdapter` Protocol（登入檢查） / Integrate `PersonalPageAdapter` Protocol (login check)
+5. 整合 `FComSharedFlowAdapter` Protocol（nickname 建立） / Integrate `FComSharedFlowAdapter` Protocol (nickname creation)
+6. 實作 Error Handling / Implement Error Handling
+7. 檔案結構：`Sources/LiveChat/UseCases/SendChatMessageUseCase.swift` / File structure: `Sources/LiveChat/UseCases/SendChatMessageUseCase.swift`
+
+## 實作規範 / Implementation Guidelines
+
+### 程式碼範例 / Code Example
+
+```swift
+import Foundation
+
+public struct SendChatMessageUseCase {
+    private let repository: LiveChatRepository
+    private let personalPageAdapter: PersonalPageAdapter
+    private let fComSharedFlowAdapter: FComSharedFlowAdapter
+    
+    public init(
+        repository: LiveChatRepository,
+        personalPageAdapter: PersonalPageAdapter,
+        fComSharedFlowAdapter: FComSharedFlowAdapter
+    ) {
+        self.repository = repository
+        self.personalPageAdapter = personalPageAdapter
+        self.fComSharedFlowAdapter = fComSharedFlowAdapter
+    }
+    
+    public struct Input: Equatable, Sendable {
+        public let chatroomId: String
+        public let content: String
+        public let messageType: LiveChat.MessageType
+        
+        public init(
+            chatroomId: String,
+            content: String,
+            messageType: LiveChat.MessageType
+        ) {
+            self.chatroomId = chatroomId
+            self.content = content
+            self.messageType = messageType
+        }
+    }
+    
+    public struct Output: Equatable, Sendable {
+        public let message: LiveChat.Message
+        
+        public init(message: LiveChat.Message) {
+            self.message = message
+        }
+    }
+    
+    public func execute(input: Input) async throws -> Output {
+        // 登入檢查
+        guard personalPageAdapter.isLoggedIn else {
+            throw SendChatMessageError.notLoggedIn
+        }
+        
+        // Nickname 檢查和建立
+        if !personalPageAdapter.hasNickname {
+            try await fComSharedFlowAdapter.createNickname()
+        }
+        
+        // 發送訊息
+        let message = try await repository.sendMessage(
+            chatroomId: input.chatroomId,
+            content: input.content,
+            messageType: input.messageType
+        )
+        
+        return Output(message: message)
+    }
+}
+```
+
+### 命名規範 / Naming Conventions
+
+- UseCase 使用 `struct`，提供 `execute(input:)` 方法 / UseCase uses `struct`, provides `execute(input:)` method
+- Input/Output 使用 nested `struct`，實作 `Equatable`、`Sendable` / Input/Output use nested `struct`, implement `Equatable`, `Sendable`
+- 使用 `LiveChat.XXX` 命名空間 / Use `LiveChat.XXX` namespace
+- 使用 `public` 修飾符 / Use `public` modifier
 
 ## 驗收條件 / Acceptance Criteria
 
-- [ ] UseCase 商業邏輯實作完成 / UseCase 商業LogicImplementation Complete
-- [ ] 登入檢查邏輯實作完成 / 登入檢查LogicImplementation Complete
-- [ ] Nickname 檢查和建立邏輯實作完成 / Nickname 檢查和建立LogicImplementation Complete
-- [ ] 所有 Test Scenarios 通過（Basic / Branch
+- [ ] `SendChatMessageUseCase` 實作完成 / `SendChatMessageUseCase` implementation complete
+- [ ] Input/Output Model 定義完成 / Input/Output Model definition complete
+- [ ] 登入檢查邏輯實作完成 / Login check logic implementation complete
+- [ ] Nickname 檢查和建立邏輯實作完成 / Nickname check and creation logic implementation complete
+- [ ] UseCase 商業邏輯實作完成 / UseCase business logic implementation complete
+- [ ] 所有 Test Scenarios 通過（Basic / Branch） / All Test Scenarios passed (Basic / Branch)
+- [ ] 檔案結構符合參考代碼風格 / File structure matches reference code style
 - [ ] Unit Test 覆蓋率 ≥ 90% / Unit Test Coverage ≥ 90%
 - [ ] Integration Test 通過 / Integration Test Passed
 

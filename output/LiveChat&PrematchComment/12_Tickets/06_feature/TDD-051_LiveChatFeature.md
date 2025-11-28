@@ -12,6 +12,7 @@
 | **依賴 Ticket** | TDD-045, TDD-046, TDD-047, TDD-048, TDD-044 |
 | **Story Point** | 13 |
 | **估時（Senior iOS Engineer + AI 輔助）** | 標準：5 天<br/>最嚴厲：4 天 |
+| **開發日期 / Development Date** | 2025-12-16 (週二)
 
 ## 描述 / Description
 
@@ -19,21 +20,148 @@
 
 ## 需求 / Requirements
 
-1. 定義 State 結構 / Define State Structure
-2. 定義 Action 列舉 / Define Action 列舉
-3. 實作 Reducer 邏輯 / Implement Reducer Logic
-4. 整合所有 UseCase 呼叫 / 整合所有 UseCase Call
-5. 實作 State 更新邏輯 / Implement State UpdateLogic
-6. 實作 WebSocket 連線狀態管理 / Implement WebSocket 連線State管理
-7. 實作 WebSocket 訊息處理 / Implement WebSocket 訊息處理
+1. 定義 `LiveChatFeature`（使用 TCA `@Reducer`） / Define `LiveChatFeature` (using TCA `@Reducer`)
+2. 定義 `State`（使用 `@ObservableState`） / Define `State` (using `@ObservableState`)
+3. 定義 `Action`（使用 `@CasePathable` enum） / Define `Action` (using `@CasePathable` enum)
+4. 實作 Reducer 邏輯（使用 `Reduce`） / Implement Reducer Logic (using `Reduce`)
+5. 整合所有 UseCase 呼叫 / Integrate all UseCase calls
+6. 實作 WebSocket 連線狀態管理 / Implement WebSocket connection state management
+7. 實作 WebSocket 訊息處理 / Implement WebSocket message handling
+8. 檔案結構：`Sources/LiveChat/Features/LiveChat/LiveChatFeature.swift` / File structure: `Sources/LiveChat/Features/LiveChat/LiveChatFeature.swift`
+
+## 實作規範 / Implementation Guidelines
+
+### 檔案結構 / File Structure
+
+```
+Sources/LiveChat/Features/LiveChat/
+  └── LiveChatFeature.swift
+```
+
+### 程式碼範例 / Code Example
+
+```swift
+import ComposableArchitecture
+import Foundation
+
+extension LiveChat {
+    @Reducer
+    struct LiveChatFeature {
+        @Dependency(\.liveChatRepository) var liveChatRepository
+        @Dependency(\.sendChatMessageUseCase) var sendChatMessageUseCase
+        @Dependency(\.joinChatroomUseCase) var joinChatroomUseCase
+        @Dependency(\.leaveChatroomUseCase) var leaveChatroomUseCase
+        @Dependency(\.blockUserUseCase) var blockUserUseCase
+        @Dependency(\.navigateToProfileUseCase) var navigateToProfileUseCase
+        
+        var body: some ReducerOf<Self> {
+            Reduce { state, action in
+                switch action {
+                case .joinChatroom:
+                    return joinChatroom(state: &state)
+                    
+                case .sendMessage(let content):
+                    return sendMessage(content: content, state: &state)
+                    
+                case .leaveChatroom:
+                    return leaveChatroom(state: &state)
+                    
+                case .blockUser(let userId):
+                    return blockUser(userId: userId, state: &state)
+                    
+                case .webSocketConnected:
+                    state.webSocketStatus = .connected
+                    return .none
+                    
+                case .webSocketDisconnected:
+                    state.webSocketStatus = .disconnected
+                    return .none
+                    
+                case .webSocketMessageReceived(let message):
+                    return handleWebSocketMessage(message: message, state: &state)
+                    
+                // MARK: - Sub-feature Actions
+                case .messageList, .chatroomInfo:
+                    return .none
+                }
+            }
+        }
+        
+        private func joinChatroom(state: inout State) -> Effect<Action> {
+            state.isLoading = true
+            return .run { [refId = state.refId] send in
+                do {
+                    let chatroomInfo = try await joinChatroomUseCase.execute(
+                        input: .init(refId: refId)
+                    )
+                    await send(.chatroomInfo(.loaded(chatroomInfo)))
+                } catch {
+                    await send(.chatroomInfo(.loadFailed(error.localizedDescription)))
+                }
+            }
+        }
+        
+        // 其他方法...
+    }
+}
+
+extension LiveChat.LiveChatFeature {
+    @ObservableState
+    struct State: Equatable {
+        var refId: String
+        var isLoading = false
+        var errorMessage: String?
+        var webSocketStatus: WebSocketStatus = .disconnected
+        
+        enum WebSocketStatus: Equatable {
+            case disconnected
+            case connecting
+            case connected
+        }
+        
+        var chatroomInfo: ChatroomInfoFeature.State
+        var messageList: MessageListFeature.State
+    }
+    
+    @CasePathable
+    enum Action: Equatable {
+        case joinChatroom
+        case sendMessage(String)
+        case leaveChatroom
+        case blockUser(String)
+        case navigateToProfile(String)
+        
+        // MARK: - WebSocket Actions
+        case webSocketConnected
+        case webSocketDisconnected
+        case webSocketMessageReceived(LiveChat.Message)
+        
+        // MARK: - Sub-feature Actions
+        case chatroomInfo(ChatroomInfoFeature.Action)
+        case messageList(MessageListFeature.Action)
+    }
+}
+```
+
+### 命名規範 / Naming Conventions
+
+- Feature 使用 `@Reducer` macro，放在 `LiveChat` namespace extension 內 / Feature uses `@Reducer` macro, placed within `LiveChat` namespace extension
+- State 使用 `@ObservableState` struct / State uses `@ObservableState` struct
+- Action 使用 `@CasePathable` enum / Action uses `@CasePathable` enum
+- 使用 `@Dependency` 注入依賴 / Use `@Dependency` to inject dependencies
+- 使用 `Reduce` 實作 reducer 邏輯 / Use `Reduce` to implement reducer logic
+- 使用 `Effect` 處理異步操作 / Use `Effect` to handle async operations
 
 ## 驗收條件 / Acceptance Criteria
 
-- [ ] State 和 Action 定義完成 / State 和 Action Definition Complete
-- [ ] Reducer 邏輯實作完成 / Reducer LogicImplementation Complete
-- [ ] 所有 Action → UseCase 映射完成 / 所有 Action → UseCase 映射完成
-- [ ] WebSocket 連線狀態管理實作完成 / WebSocket 連線State管理Implementation Complete
-- [ ] WebSocket 訊息處理實作完成 / WebSocket 訊息處理Implementation Complete
+- [ ] `LiveChatFeature` 定義完成，使用 `@Reducer` / `LiveChatFeature` definition complete, using `@Reducer`
+- [ ] `State` 定義完成，使用 `@ObservableState` / `State` definition complete, using `@ObservableState`
+- [ ] `Action` 定義完成，使用 `@CasePathable` / `Action` definition complete, using `@CasePathable`
+- [ ] Reducer 邏輯實作完成，使用 `Reduce` / Reducer logic implementation complete, using `Reduce`
+- [ ] 所有 Action → UseCase 映射完成 / All Action → UseCase mapping complete
+- [ ] WebSocket 連線狀態管理實作完成 / WebSocket connection state management implementation complete
+- [ ] WebSocket 訊息處理實作完成 / WebSocket message handling implementation complete
+- [ ] 檔案結構符合參考代碼風格 / File structure matches reference code style
 - [ ] Unit Test 覆蓋率 ≥ 80% / Unit Test Coverage ≥ 80%
 
 ## 相關文件 / Related Documents
