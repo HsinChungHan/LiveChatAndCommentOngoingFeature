@@ -1,0 +1,213 @@
+# 工作日誌 Git 分支工作流程
+
+本文檔說明如何創建新的工作日誌並部署到 GitHub Pages，同時確保舊的工作日誌不會丟失。
+
+## 📋 工作流程概述
+
+```
+main 分支 (源文件)          gh-pages 分支 (生成的網站)
+     │                            │
+     ├─ 創建工作日誌 Markdown      │
+     ├─ Commit 到 main            │
+     ├─ 執行 mkdocs gh-deploy ────┼─> 生成 HTML
+     │                            ├─ 推送到 gh-pages
+     │                            └─ 所有工作日誌都保留
+```
+
+## 🔄 完整工作流程
+
+### 步驟 1: 在 main 分支創建工作日誌
+
+```bash
+# 1. 確保在 main 分支
+cd /Users/reedhsin/Documents/codebase/fcom-iOS/TDDs/LiveChat&PrematchComment/LiveChat&PrematchComment
+git checkout main
+git pull origin main
+
+# 2. 創建今天的工作日誌
+./scripts/create_daily_log.sh
+
+# 或指定日期
+./scripts/create_daily_log.sh 2025-12-03
+```
+
+**結果**: 在 `15_Daily_Logs/` 目錄下創建 `YYYY-MM-DD.md` 文件
+
+### 步驟 2: 編輯工作日誌
+
+編輯剛創建的工作日誌文件，記錄：
+- 📋 今日計劃
+- ✅ 完成項目
+- 🚧 進行中項目
+- 🐛 遇到的問題
+- 💡 學習與反思
+- 📊 時間統計
+- 🔄 明日計劃
+
+### 步驟 3: Commit 到 main 分支
+
+```bash
+# 1. 檢查變更
+git status
+
+# 2. 添加工作日誌文件
+git add 15_Daily_Logs/YYYY-MM-DD.md
+
+# 3. Commit（使用 Conventional Commits 格式）
+git commit -m "docs: add daily log for YYYY-MM-DD"
+
+# 4. Push 到遠端
+git push origin main
+```
+
+**重要**: 
+- ✅ 工作日誌的 Markdown 文件必須在 **main 分支**
+- ✅ 這樣才能確保所有工作日誌都被保留
+- ✅ 每次部署時，MkDocs 會從 main 分支的源文件生成所有 HTML
+
+### 步驟 4: 部署到 GitHub Pages
+
+```bash
+# 1. 確保在正確的目錄
+cd /Users/reedhsin/Documents/codebase/fcom-iOS/TDDs/LiveChat&PrematchComment/LiveChat&PrematchComment
+
+# 2. 執行部署
+python3 -m mkdocs gh-deploy
+```
+
+**MkDocs 會自動**:
+1. 從 `docs/` 目錄（或 `mkdocs.yml` 中配置的 `docs_dir`）讀取所有 Markdown 文件
+2. 生成 HTML 文件到 `site/` 目錄
+3. 將 `site/` 目錄的內容推送到 `gh-pages` 分支
+4. **覆蓋** gh-pages 分支的舊內容（但會包含所有源文件生成的 HTML）
+
+### 步驟 5: 驗證部署
+
+```bash
+# 檢查 gh-pages 分支
+git fetch origin gh-pages
+git checkout origin/gh-pages
+ls -la 15_Daily_Logs/logs/
+
+# 應該看到所有工作日誌的 HTML 文件
+# 例如：
+# 2025-12-01/
+# 2025-12-02/
+# 2025-12-03/
+```
+
+## ⚠️ 重要注意事項
+
+### 1. 不要直接編輯 gh-pages 分支
+
+❌ **錯誤做法**:
+```bash
+git checkout gh-pages
+# 直接編輯 HTML 文件
+git commit -m "update daily log"
+```
+
+✅ **正確做法**:
+```bash
+git checkout main
+# 編輯 Markdown 源文件
+git commit -m "docs: update daily log"
+python3 -m mkdocs gh-deploy
+```
+
+### 2. 確保所有工作日誌都在 main 分支
+
+在部署前，確認所有工作日誌的 Markdown 文件都在 main 分支：
+
+```bash
+git checkout main
+ls -la 15_Daily_Logs/*.md
+```
+
+如果發現缺少某個工作日誌（例如昨天的），需要：
+1. 從 gh-pages 的 HTML 中提取內容
+2. 重建 Markdown 文件
+3. 添加到 main 分支
+4. 然後再部署
+
+### 3. mkdocs.yml 配置
+
+確保 `mkdocs.yml` 中的 `nav` 配置包含 Daily Logs：
+
+```yaml
+nav:
+  - Daily Logs:
+    - 15_Daily_Logs/README.md
+    - 15_Daily_Logs/2025-12-01.md
+    - 15_Daily_Logs/2025-12-02.md
+    - 15_Daily_Logs/2025-12-03.md
+```
+
+或者使用動態配置（如果 MkDocs 支持）。
+
+## 🔍 檢查清單
+
+在部署前，確認：
+
+- [ ] 在 main 分支
+- [ ] 所有工作日誌的 Markdown 文件都在 `15_Daily_Logs/` 目錄
+- [ ] 工作日誌文件已 commit 到 main 分支
+- [ ] `mkdocs.yml` 配置正確
+- [ ] 執行 `mkdocs gh-deploy` 前已 push 到遠端
+
+## 📝 日常使用範例
+
+### 每天開始時
+
+```bash
+# 1. 創建工作日誌
+./scripts/create_daily_log.sh
+
+# 2. 編輯工作日誌（記錄今日計劃）
+code 15_Daily_Logs/$(date +%Y-%m-%d).md
+```
+
+### 每天結束時
+
+```bash
+# 1. 完成工作日誌編輯
+code 15_Daily_Logs/$(date +%Y-%m-%d).md
+
+# 2. Commit 到 main
+git add 15_Daily_Logs/$(date +%Y-%m-%d).md
+git commit -m "docs: add daily log for $(date +%Y-%m-%d)"
+
+# 3. Push 到遠端
+git push origin main
+
+# 4. 部署到 GitHub Pages（可選，可以累積幾天再部署）
+python3 -m mkdocs gh-deploy
+```
+
+## 🚨 常見問題
+
+### Q: 如果忘記 commit 工作日誌就部署了怎麼辦？
+
+A: 部署後，gh-pages 分支會缺少該工作日誌的 HTML。解決方法：
+1. 在 main 分支 commit 工作日誌
+2. 重新執行 `mkdocs gh-deploy`
+
+### Q: 如何恢復遺失的工作日誌？
+
+A: 
+1. 檢查 gh-pages 分支是否有 HTML 版本
+2. 從 HTML 中提取內容
+3. 重建 Markdown 文件
+4. 添加到 main 分支
+5. 重新部署
+
+### Q: 可以同時編輯多個工作日誌嗎？
+
+A: 可以。只要確保所有編輯都在 main 分支，並且在部署前都 commit 了。
+
+## 📚 相關文件
+
+- [工作日誌 README](./README.md)
+- [工作日誌模板](./TEMPLATE.md)
+- [MkDocs 部署指南](../17_Cursor_Commands/deploy-tdd-to-mkdocs.md)
+
