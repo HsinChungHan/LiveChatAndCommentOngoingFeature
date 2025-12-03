@@ -36,6 +36,9 @@
    - `GET /chat/match/{refId}`
    - `GET /chat/match/backward`
    - `POST /chat/match/message`（僅支援 TEXT 類型）
+   - `POST /chat/match/join`（可選操作）
+   - `POST /chat/match/leave`（可選操作）
+   - `POST /chat/match/leave/bulk`（可選操作，批量強制離開）
    - `wss://{domain}/chat/websocket/web-chat`（WebSocket）
 
 ## 實作規範 / Implementation Guidelines
@@ -51,6 +54,173 @@ Sources/LiveChat/Services/API/Chat/
   ├── ChatAPI+RepositoryProtocol.swift # Repository Protocol
   └── ChatAPI+Repository.swift        # Repository 實作（actor）
 ```
+
+### 程式碼範例 / Code Examples
+
+#### ChatAPI+Endpoint.swift
+```swift
+import Foundation
+import NetworkService
+import NetworkUtils
+import SportyFoundation
+
+extension ChatAPI {
+    public enum ChatEndpoint: APIEndpoint {
+        case getBatchCount(refIdList: [String])
+        case getChatroomInfo(refId: String, userId: String?)
+        case getHistoricalMessages(chatroomId: String, messageNo: Int, length: Int?)
+        case sendMessage(chatroomId: String, text: String)
+        case joinChatroom(chatroomId: String)
+        case leaveChatroom(chatroomId: String)
+        case bulkLeaveChatroom(chatroomId: String, excludeUserIds: [String]?)
+        
+        public var baseURL: String {
+            AppConfiguration.current.environment.domain.absoluteString
+        }
+        
+        public var path: String {
+            let base = "/api/\(Region.current.apiCountryCode)/chat/match"
+            
+            switch self {
+            case .getBatchCount:
+                return "\(base)/batch/count"
+            case .getChatroomInfo(let refId, _):
+                return "\(base)/\(refId)"
+            case .getHistoricalMessages:
+                return "\(base)/backward"
+            case .sendMessage:
+                return "\(base)/message"
+            case .joinChatroom:
+                return "\(base)/join"
+            case .leaveChatroom:
+                return "\(base)/leave"
+            case .bulkLeaveChatroom:
+                return "\(base)/leave/bulk"
+            }
+        }
+        
+        public var method: String {
+            switch self {
+            case .getBatchCount, .getChatroomInfo, .getHistoricalMessages:
+                return FComHTTPMethod.get.rawValue
+            case .sendMessage, .joinChatroom, .leaveChatroom, .bulkLeaveChatroom:
+                return FComHTTPMethod.post.rawValue
+            }
+        }
+        
+        public var encoding: APIEncoding {
+            switch self {
+            case .getBatchCount, .getChatroomInfo, .getHistoricalMessages:
+                return .url
+            case .sendMessage, .joinChatroom, .leaveChatroom, .bulkLeaveChatroom:
+                return .json
+            }
+        }
+        
+        public var parameters: [String: Any]? {
+            switch self {
+            case .getBatchCount(let refIdList):
+                return ["refIdList": refIdList]
+            case .getChatroomInfo(let refId, let userId):
+                var params: [String: Any] = ["refId": refId]
+                if let userId = userId {
+                    params["userId"] = userId
+                }
+                return params
+            case .getHistoricalMessages(let chatroomId, let messageNo, let length):
+                var params: [String: Any] = [
+                    "chatRoomId": chatroomId,
+                    "messageNo": messageNo
+                ]
+                if let length = length {
+                    params["length"] = length
+                }
+                return params
+            case .sendMessage(let chatroomId, let text):
+                return [
+                    "chatRoomId": chatroomId,
+                    "text": text,
+                    "messageType": "TEXT"
+                ]
+            case .joinChatroom(let chatroomId):
+                return ["chatRoomId": chatroomId]
+            case .leaveChatroom(let chatroomId):
+                return ["chatRoomId": chatroomId]
+            case .bulkLeaveChatroom(let chatroomId, let excludeUserIds):
+                var params: [String: Any] = ["chatRoomId": chatroomId]
+                if let excludeUserIds = excludeUserIds {
+                    params["excludeUserIds"] = excludeUserIds
+                }
+                return params
+            }
+        }
+    }
+}
+```
+
+#### ChatAPI+WebSocket.swift
+```swift
+import Foundation
+
+extension ChatAPI {
+    /// WebSocket endpoint for real-time chat messages
+    public struct WebSocketEndpoint {
+        /// WebSocket URL
+        /// - Parameter domain: WebSocket domain (e.g., "www.encorebet.net")
+        /// - Returns: WebSocket URL
+        public static func url(for domain: String) -> URL? {
+            URL(string: "wss://\(domain)/chat/websocket/web-chat")
+        }
+        
+        /// STOMP subscription destination
+        /// - Parameter chatroomId: Chat room ID
+        /// - Returns: STOMP destination (e.g., "/topic/chat_room.{chatroomId}")
+        public static func subscribeDestination(chatroomId: String) -> String {
+            "/topic/chat_room.\(chatroomId)"
+        }
+    }
+    
+    /// WebSocket message DTO
+    public struct WebSocketMessageDTO: Codable, Sendable {
+        public let type: String  // "MESSAGE"
+        public let data: MessageResponseDataDTO  // 與 POST /chat/match/message 的 Response 格式相同
+        
+        enum CodingKeys: String, CodingKey {
+            case type, data
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            type = try container.decodeIfPresent(String.self, forKey: .type) ?? ""
+            data = try container.decodeIfPresent(MessageResponseDataDTO.self, forKey: .data) ?? .dummy
+        }
+    }
+}
+```
+
+**WebSocket 規格說明**：
+
+1. **Connect Headers**：
+   - `Platform: ios`
+   - `App-Version: {version}`
+   - `Device-Id: {deviceId}`
+   - `userId: {userId}`
+
+2. **Subscribe Headers**：
+   - `x-queue-name: {chatRoomId}`
+
+3. **Message Types (msgType)**：
+   - `1`: TEXT 消息
+   - `4`: JSON 消息（投注分享等）
+   - `5`: GIF 消息
+
+4. **Unsubscribe Format**：
+   ```
+   UNSUBSCRIBE
+   id:{subscriptionId}
+   ```
+
+詳細規格請參考：`08_API Spec & Mapping/01_api_spec.md`
 
 ### 命名規範 / Naming Conventions
 
@@ -73,8 +243,8 @@ Sources/LiveChat/Services/API/Chat/
 
 ## 相關文件 / Related Documents
 
-- API Spec：`output/LiveChat&PrematchComment/08_API Spec & Mapping/01_api_spec.md`
-- Module Responsibility：`output/LiveChat&PrematchComment/03_Module Responsibility/01_module_responsibility.md`
+- API Spec：`08_API Spec & Mapping/01_api_spec.md`
+- Module Responsibility：`03_Module Responsibility/01_module_responsibility.md`
 
 ## 調整因子說明 / 調整因子說明
 

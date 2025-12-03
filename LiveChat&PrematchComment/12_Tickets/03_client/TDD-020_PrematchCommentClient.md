@@ -48,15 +48,40 @@ public struct PrematchCommentClient {
         self.apiRepository = apiRepository
     }
     
-    public func getCommentMeta(refId: String) async throws -> PrematchCommentAPI.CommentMetaDTO {
+    /// 批量獲取評論資訊
+    public func getBatchCommentInfo(refIdList: [String]) async throws -> [PrematchCommentAPI.CommentMetaInfoDTO] {
+        return try await apiRepository.getBatchCommentInfo(refIdList: refIdList)
+    }
+    
+    /// 獲取單個評論資訊
+    public func getCommentMeta(refId: String) async throws -> PrematchCommentAPI.CommentMetaDataDTO {
         return try await apiRepository.getCommentMeta(refId: refId)
     }
     
-    public func getComments(refId: String, mode: String, cursor: Int?) async throws -> PrematchCommentAPI.CommentPageDTO {
-        return try await apiRepository.getComments(refId: refId, mode: mode, cursor: cursor)
+    /// 獲取熱度排序的評論列表
+    public func getCommentsByPopular(refId: String, pageNum: Int?, pageSize: Int?) async throws -> [PrematchCommentAPI.CommentDTO] {
+        return try await apiRepository.getCommentsByPopular(refId: refId, pageNum: pageNum, pageSize: pageSize)
     }
     
-    // 其他方法...
+    /// 獲取最新排序的評論列表
+    public func getCommentsByNewest(refId: String, prevCommentId: Int64?, pageSize: Int?) async throws -> [PrematchCommentAPI.CommentDTO] {
+        return try await apiRepository.getCommentsByNewest(refId: refId, prevCommentId: prevCommentId, pageSize: pageSize)
+    }
+    
+    /// 獲取回覆列表
+    public func getReplies(parentCommentId: Int64, prevCommentId: Int64?, pageSize: Int?) async throws -> [PrematchCommentAPI.CommentDTO] {
+        return try await apiRepository.getReplies(parentCommentId: parentCommentId, prevCommentId: prevCommentId, pageSize: pageSize)
+    }
+    
+    /// 發佈評論
+    public func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: AnyCodable]?, tagUserId: String?) async throws -> PrematchCommentAPI.CommentDTO {
+        return try await apiRepository.publishComment(refId: refId, content: content, parentId: parentId, sharedBetsMeta: sharedBetsMeta, tagUserId: tagUserId)
+    }
+    
+    /// 切換點讚狀態
+    public func toggleLike(commentId: Int64) async throws -> PrematchCommentAPI.CommentDTO? {
+        return try await apiRepository.toggleLike(commentId: commentId)
+    }
 }
 ```
 
@@ -78,6 +103,6 @@ public struct PrematchCommentClient {
 
 ## 相關文件 / Related Documents
 
-- API Spec：`output/LiveChat&PrematchComment/08_API Spec & Mapping/01_api_spec.md`
-- Module Responsibility：`output/LiveChat&PrematchComment/03_Module Responsibility/01_module_responsibility.md`
+- API Spec：`08_API Spec & Mapping/01_api_spec.md`
+- Module Responsibility：`03_Module Responsibility/01_module_responsibility.md`
 

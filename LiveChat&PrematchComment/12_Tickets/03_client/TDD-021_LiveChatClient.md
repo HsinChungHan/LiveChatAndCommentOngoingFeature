@@ -48,11 +48,40 @@ public struct LiveChatClient {
         self.apiRepository = apiRepository
     }
     
-    public func getChatroomInfo(refId: String) async throws -> ChatAPI.ChatroomInfoDTO {
-        return try await apiRepository.getChatroomInfo(refId: refId)
+    /// 批量獲取聊天室計數
+    public func getBatchCount(refIdList: [String]) async throws -> [ChatAPI.ChatRoomCountDTO] {
+        return try await apiRepository.getBatchCount(refIdList: refIdList)
     }
     
-    // 其他方法...
+    /// 獲取或創建聊天室資訊
+    public func getChatroomInfo(refId: String, userId: String?) async throws -> ChatAPI.ChatroomInfoDataDTO {
+        return try await apiRepository.getChatroomInfo(refId: refId, userId: userId)
+    }
+    
+    /// 獲取歷史消息
+    public func getHistoricalMessages(chatroomId: String, messageNo: Int, length: Int?) async throws -> [ChatAPI.MessageDTO] {
+        return try await apiRepository.getHistoricalMessages(chatroomId: chatroomId, messageNo: messageNo, length: length)
+    }
+    
+    /// 發送消息
+    public func sendMessage(chatroomId: String, text: String) async throws -> ChatAPI.MessageResponseDataDTO {
+        return try await apiRepository.sendMessage(chatroomId: chatroomId, text: text)
+    }
+    
+    /// 加入聊天室（可選操作）
+    public func joinChatroom(chatroomId: String) async throws {
+        _ = try await apiRepository.joinChatroom(chatroomId: chatroomId)
+    }
+    
+    /// 離開聊天室（可選操作）
+    public func leaveChatroom(chatroomId: String) async throws {
+        _ = try await apiRepository.leaveChatroom(chatroomId: chatroomId)
+    }
+    
+    /// 批量強制離開聊天室（可選操作）
+    public func bulkLeaveChatroom(chatroomId: String, excludeUserIds: [String]?) async throws {
+        _ = try await apiRepository.bulkLeaveChatroom(chatroomId: chatroomId, excludeUserIds: excludeUserIds)
+    }
 }
 ```
 
@@ -74,6 +103,6 @@ public struct LiveChatClient {
 
 ## 相關文件 / Related Documents
 
-- API Spec：`output/LiveChat&PrematchComment/08_API Spec & Mapping/01_api_spec.md`
-- Module Responsibility：`output/LiveChat&PrematchComment/03_Module Responsibility/01_module_responsibility.md`
+- API Spec：`08_API Spec & Mapping/01_api_spec.md`
+- Module Responsibility：`03_Module Responsibility/01_module_responsibility.md`
 

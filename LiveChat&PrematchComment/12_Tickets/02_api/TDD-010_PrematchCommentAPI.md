@@ -69,11 +69,13 @@ import SportyFoundation
 
 extension PrematchCommentAPI {
     public enum PrematchCommentEndpoint: APIEndpoint {
+        case getBatchCommentInfo(refIdList: [String])
         case getCommentMeta(refId: String)
-        case getComments(refId: String, mode: String, cursor: Int?)
-        case publishComment(refId: String, content: String, parentId: String?)
-        case toggleLike(commentId: String)
-        case getReplies(commentId: String, cursor: Int?)
+        case getCommentsByPopular(refId: String, pageNum: Int?, pageSize: Int?)
+        case getCommentsByNewest(refId: String, prevCommentId: Int64?, pageSize: Int?)
+        case getReplies(parentCommentId: Int64, prevCommentId: Int64?, pageSize: Int?)
+        case publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: AnyCodable]?, tagUserId: String?)
+        case toggleLike(commentId: Int64)
         
         public var baseURL: String {
             AppConfiguration.current.environment.domain.absoluteString
@@ -83,61 +85,91 @@ extension PrematchCommentAPI {
             let base = "/api/\(Region.current.apiCountryCode)/chat/match/comment"
             
             switch self {
-            case .getCommentMeta:
+            case .getBatchCommentInfo:
                 return "\(base)/batch/info"
-            case .getComments:
-                return "\(base)/info/{refId}"
+            case .getCommentMeta(let refId):
+                return "\(base)/info/\(refId)"
+            case .getCommentsByPopular:
+                return "\(base)/popular"
+            case .getCommentsByNewest:
+                return "\(base)/newest"
+            case .getReplies:
+                return "\(base)/replies"
             case .publishComment:
                 return "\(base)"
             case .toggleLike:
                 return "\(base)/like"
-            case .getReplies:
-                return "\(base)/replies"
             }
         }
         
         public var method: String {
             switch self {
-            case .getCommentMeta, .getComments, .getReplies:
-                return FComHTTPMethod.get.rawValue
-            case .publishComment, .toggleLike:
+            case .getBatchCommentInfo, .publishComment, .toggleLike:
                 return FComHTTPMethod.post.rawValue
+            case .getCommentMeta, .getCommentsByPopular, .getCommentsByNewest, .getReplies:
+                return FComHTTPMethod.get.rawValue
             }
         }
         
         public var encoding: APIEncoding {
             switch self {
-            case .getCommentMeta, .getComments, .getReplies:
-                return .url
-            case .publishComment, .toggleLike:
+            case .getBatchCommentInfo, .publishComment, .toggleLike:
                 return .json
+            case .getCommentMeta, .getCommentsByPopular, .getCommentsByNewest, .getReplies:
+                return .url
             }
         }
         
         public var parameters: [String: Any]? {
             switch self {
-            case .getCommentMeta(let refId):
-                return ["refId": refId]
-            case .getComments(let refId, let mode, let cursor):
-                var params: [String: Any] = ["refId": refId, "mode": mode]
-                if let cursor = cursor {
-                    params["cursor"] = cursor
+            case .getBatchCommentInfo(let refIdList):
+                return ["refIdList": refIdList]
+            case .getCommentMeta:
+                return nil  // Path parameter only
+            case .getCommentsByPopular(let refId, let pageNum, let pageSize):
+                var params: [String: Any] = ["refId": refId]
+                if let pageNum = pageNum {
+                    params["pageNum"] = pageNum
+                }
+                if let pageSize = pageSize {
+                    params["pageSize"] = pageSize
                 }
                 return params
-            case .publishComment(let refId, let content, let parentId):
-                var params: [String: Any] = ["refId": refId, "content": content]
+            case .getCommentsByNewest(let refId, let prevCommentId, let pageSize):
+                var params: [String: Any] = ["refId": refId]
+                if let prevCommentId = prevCommentId {
+                    params["prevCommentId"] = prevCommentId
+                }
+                if let pageSize = pageSize {
+                    params["pageSize"] = pageSize
+                }
+                return params
+            case .getReplies(let parentCommentId, let prevCommentId, let pageSize):
+                var params: [String: Any] = ["parentCommentId": parentCommentId]
+                if let prevCommentId = prevCommentId {
+                    params["prevCommentId"] = prevCommentId
+                }
+                if let pageSize = pageSize {
+                    params["pageSize"] = pageSize
+                }
+                return params
+            case .publishComment(let refId, let content, let parentId, let sharedBetsMeta, let tagUserId):
+                var params: [String: Any] = [
+                    "refId": refId,
+                    "comment": content
+                ]
                 if let parentId = parentId {
-                    params["parentId"] = parentId
+                    params["parentCommentId"] = parentId
+                }
+                if let sharedBetsMeta = sharedBetsMeta {
+                    params["sharedBetsMeta"] = sharedBetsMeta
+                }
+                if let tagUserId = tagUserId {
+                    params["tagUserId"] = tagUserId
                 }
                 return params
             case .toggleLike(let commentId):
                 return ["commentId": commentId]
-            case .getReplies(let commentId, let cursor):
-                var params: [String: Any] = ["commentId": commentId]
-                if let cursor = cursor {
-                    params["cursor"] = cursor
-                }
-                return params
             }
         }
     }
@@ -149,41 +181,100 @@ extension PrematchCommentAPI {
 import Foundation
 
 extension PrematchCommentAPI {
+    // MARK: - Response DTOs
+    
+    public struct CommentMetaInfoDTO: Decodable, Sendable {
+        public let refId: String
+        public let commentCount: String
+        public let betCount: String
+    }
+    
+    public struct CommentMetaDataDTO: Decodable, Sendable {
+        public let refId: String
+        public let commentCount: String
+        public let betCount: String
+    }
+    
     public struct CommentDTO: Decodable, Sendable {
         public let id: Int64
-        public let content: String
-        public let likeCount: Int
-        public let authorId: String
-        public let authorNickname: String?
-        public let parentId: Int64
-        public let createdAt: Int64
-        public let repliesCount: Int
-        public let likedByMe: Bool
+        public let parentId: Int64  // 0 表示第一層評論
+        public let sharedBetsMeta: String?  // 共享投注資訊（自訂 JSON 格式）
+        public let userId: String
+        public let userNickname: String
+        public let userTierLevel: String
+        public let userAvatar: String
+        public let countryCode: String
+        public let comment: String  // 注意：API 欄位名稱是 "comment"
         public let isIsolated: Bool
         public let isDeleted: Bool
+        public let likedCount: Int
+        public let repliesCount: Int
+        public let likedByMe: Bool
+        public let createTime: Int64  // 時間戳（毫秒）
+        public let tagUserId: String?
+        public let tagUserNickname: String?
         
         enum CodingKeys: String, CodingKey {
-            case id, content, likeCount, authorId, authorNickname, parentId
-            case createdAt, repliesCount, likedByMe, isIsolated, isDeleted
-        }
-        
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            id = try container.decode(Int64.self, forKey: .id)
-            content = try container.decode(String.self, forKey: .content)
-            likeCount = try container.decode(Int.self, forKey: .likeCount)
-            authorId = try container.decode(String.self, forKey: .authorId)
-            authorNickname = try container.decodeIfPresent(String.self, forKey: .authorNickname)
-            parentId = try container.decode(Int64.self, forKey: .parentId)
-            createdAt = try container.decode(Int64.self, forKey: .createdAt)
-            repliesCount = try container.decodeIfPresent(Int.self, forKey: .repliesCount) ?? 0
-            likedByMe = try container.decodeIfPresent(Bool.self, forKey: .likedByMe) ?? false
-            isIsolated = try container.decodeIfPresent(Bool.self, forKey: .isIsolated) ?? false
-            isDeleted = try container.decodeIfPresent(Bool.self, forKey: .isDeleted) ?? false
+            case id, parentId, sharedBetsMeta, userId, userNickname, userTierLevel
+            case userAvatar, countryCode, comment, isIsolated, isDeleted
+            case likedCount, repliesCount, likedByMe, createTime, tagUserId, tagUserNickname
         }
     }
     
-    // 其他 DTO 定義...
+    // MARK: - Request DTOs
+    
+    public struct BatchCommentInfoRequestDTO: Encodable, Sendable {
+        public let refIdList: [String]
+    }
+    
+    public struct PublishCommentRequestDTO: Encodable, Sendable {
+        public let refId: String
+        public let parentCommentId: Int64?  // 可選，父評論 ID（如果是回覆）
+        public let sharedBetsMeta: [String: AnyCodable]?  // 可選，共享投注資訊（自訂 JSON 格式）
+        public let comment: String
+        public let tagUserId: String?  // 可選，被標記的用戶 ID
+    }
+    
+    public struct ToggleLikeRequestDTO: Encodable, Sendable {
+        public let commentId: Int64?
+    }
+    
+    // MARK: - Response Wrappers
+    
+    public struct BatchCommentInfoResponseDTO: Decodable, Sendable {
+        public let bizCode: Int
+        public let innerMsg: String?
+        public let message: String?
+        public let data: [CommentMetaInfoDTO]
+    }
+    
+    public struct CommentMetaResponseDTO: Decodable, Sendable {
+        public let bizCode: Int
+        public let innerMsg: String?
+        public let message: String?
+        public let data: CommentMetaDataDTO
+    }
+    
+    public struct CommentListResponseDTO: Decodable, Sendable {
+        public let bizCode: Int
+        public let innerMsg: String?
+        public let message: String?
+        public let data: [CommentDTO]
+    }
+    
+    public struct CommentResponseDTO: Decodable, Sendable {
+        public let bizCode: Int
+        public let innerMsg: String?
+        public let message: String?
+        public let data: CommentDTO
+    }
+    
+    public struct ToggleLikeResponseDTO: Decodable, Sendable {
+        public let bizCode: Int
+        public let innerMsg: String?
+        public let message: String?
+        public let data: CommentDTO?  // 根據 API Docs，回應為 null，但實際可能返回更新後的 CommentDTO
+    }
 }
 ```
 
@@ -193,11 +284,13 @@ import Foundation
 
 extension PrematchCommentAPI {
     protocol PrematchCommentRepositoryProtocol {
-        func getCommentMeta(refId: String) async throws -> PrematchCommentAPI.CommentMetaDTO
-        func getComments(refId: String, mode: String, cursor: Int?) async throws -> PrematchCommentAPI.CommentPageDTO
-        func publishComment(refId: String, content: String, parentId: String?) async throws -> PrematchCommentAPI.CommentDTO
-        func toggleLike(commentId: String) async throws -> PrematchCommentAPI.CommentDTO
-        func getReplies(commentId: String, cursor: Int?) async throws -> PrematchCommentAPI.CommentPageDTO
+        func getBatchCommentInfo(refIdList: [String]) async throws -> [CommentMetaInfoDTO]
+        func getCommentMeta(refId: String) async throws -> CommentMetaDataDTO
+        func getCommentsByPopular(refId: String, pageNum: Int?, pageSize: Int?) async throws -> [CommentDTO]
+        func getCommentsByNewest(refId: String, prevCommentId: Int64?, pageSize: Int?) async throws -> [CommentDTO]
+        func getReplies(parentCommentId: Int64, prevCommentId: Int64?, pageSize: Int?) async throws -> [CommentDTO]
+        func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: AnyCodable]?, tagUserId: String?) async throws -> CommentDTO
+        func toggleLike(commentId: Int64) async throws -> CommentDTO?
     }
 }
 ```
@@ -215,29 +308,46 @@ extension PrematchCommentAPI {
             self.apiClient = apiClient
         }
         
-        public func getCommentMeta(refId: String) async throws -> PrematchCommentAPI.CommentMetaDTO {
+        public func getBatchCommentInfo(refIdList: [String]) async throws -> [CommentMetaInfoDTO] {
+            let endpoint = PrematchCommentEndpoint.getBatchCommentInfo(refIdList: refIdList)
+            let response: BatchCommentInfoResponseDTO = try await apiClient.request(endpoint)
+            return response.data
+        }
+        
+        public func getCommentMeta(refId: String) async throws -> CommentMetaDataDTO {
             let endpoint = PrematchCommentEndpoint.getCommentMeta(refId: refId)
-            return try await apiClient.request(endpoint)
+            let response: CommentMetaResponseDTO = try await apiClient.request(endpoint)
+            return response.data
         }
         
-        public func getComments(refId: String, mode: String, cursor: Int?) async throws -> PrematchCommentAPI.CommentPageDTO {
-            let endpoint = PrematchCommentEndpoint.getComments(refId: refId, mode: mode, cursor: cursor)
-            return try await apiClient.request(endpoint)
+        public func getCommentsByPopular(refId: String, pageNum: Int?, pageSize: Int?) async throws -> [CommentDTO] {
+            let endpoint = PrematchCommentEndpoint.getCommentsByPopular(refId: refId, pageNum: pageNum, pageSize: pageSize)
+            let response: CommentListResponseDTO = try await apiClient.request(endpoint)
+            return response.data
         }
         
-        public func publishComment(refId: String, content: String, parentId: String?) async throws -> PrematchCommentAPI.CommentDTO {
-            let endpoint = PrematchCommentEndpoint.publishComment(refId: refId, content: content, parentId: parentId)
-            return try await apiClient.request(endpoint)
+        public func getCommentsByNewest(refId: String, prevCommentId: Int64?, pageSize: Int?) async throws -> [CommentDTO] {
+            let endpoint = PrematchCommentEndpoint.getCommentsByNewest(refId: refId, prevCommentId: prevCommentId, pageSize: pageSize)
+            let response: CommentListResponseDTO = try await apiClient.request(endpoint)
+            return response.data
         }
         
-        public func toggleLike(commentId: String) async throws -> PrematchCommentAPI.CommentDTO {
+        public func getReplies(parentCommentId: Int64, prevCommentId: Int64?, pageSize: Int?) async throws -> [CommentDTO] {
+            let endpoint = PrematchCommentEndpoint.getReplies(parentCommentId: parentCommentId, prevCommentId: prevCommentId, pageSize: pageSize)
+            let response: CommentListResponseDTO = try await apiClient.request(endpoint)
+            return response.data
+        }
+        
+        public func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: AnyCodable]?, tagUserId: String?) async throws -> CommentDTO {
+            let endpoint = PrematchCommentEndpoint.publishComment(refId: refId, content: content, parentId: parentId, sharedBetsMeta: sharedBetsMeta, tagUserId: tagUserId)
+            let response: CommentResponseDTO = try await apiClient.request(endpoint)
+            return response.data
+        }
+        
+        public func toggleLike(commentId: Int64) async throws -> CommentDTO? {
             let endpoint = PrematchCommentEndpoint.toggleLike(commentId: commentId)
-            return try await apiClient.request(endpoint)
-        }
-        
-        public func getReplies(commentId: String, cursor: Int?) async throws -> PrematchCommentAPI.CommentPageDTO {
-            let endpoint = PrematchCommentEndpoint.getReplies(commentId: commentId, cursor: cursor)
-            return try await apiClient.request(endpoint)
+            let response: ToggleLikeResponseDTO = try await apiClient.request(endpoint)
+            return response.data  // 可能為 null
         }
     }
 }
@@ -263,6 +373,6 @@ extension PrematchCommentAPI {
 
 ## 相關文件 / Related Documents
 
-- API Spec：`output/LiveChat&PrematchComment/08_API Spec & Mapping/01_api_spec.md`
-- Module Responsibility：`output/LiveChat&PrematchComment/03_Module Responsibility/01_module_responsibility.md`
+- API Spec：`08_API Spec & Mapping/01_api_spec.md`
+- Module Responsibility：`03_Module Responsibility/01_module_responsibility.md`
 
