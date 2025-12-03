@@ -24,6 +24,13 @@ if ! [[ "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
     exit 1
 fi
 
+# 檢查是否為工作日（週一至週五）
+WEEKDAY=$(python3 -c "from datetime import datetime; d = datetime.strptime('$DATE', '%Y-%m-%d'); print(d.weekday())")
+if [ "$WEEKDAY" -ge 5 ]; then
+    echo "錯誤: $DATE 是週末，只有工作日才能建立 daily plan"
+    exit 1
+fi
+
 # 建立工作計劃檔案
 PLAN_FILE="$CURSOR_WORKFLOW_DIR/daily_plans/$DATE.md"
 

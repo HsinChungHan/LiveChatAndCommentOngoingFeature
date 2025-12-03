@@ -14,6 +14,42 @@
 
 ---
 
+## 2025-12-02
+
+### ✅ 完成
+
+- [TDD-021] 實作 LiveChatClient（HTTP）[FOOTBALL-9182]
+  - **檔案**: `MatchChat/Sources/MatchChat/Services/API/LiveChatClient.swift`
+  - **變更**: 新增 LiveChatClient struct，包含 4 個 HTTP API 方法
+    - `getBatchCount(refIdList:)` - 批量獲取聊天室數量
+    - `getChatroomInfo(refId:userId:)` - 獲取聊天室資訊
+    - `getHistoricalMessages(chatroomId:messageNo:length:)` - 獲取歷史訊息
+    - `sendMessage(chatroomId:text:)` - 發送訊息
+  - **設計**: 整合 `ChatAPI.ChatRepository`，支援依賴注入
+  - **測試**: ⚠️ 待補（Unit Test 和 Integration Test）
+  - **Commit**: `198f313a0a`
+
+- [TDD-020] 實作 PrematchCommentClient（HTTP）[FOOTBALL-9181]
+  - **檔案**: `MatchChat/Sources/MatchChat/Services/API/PrematchCommentClient.swift`
+  - **變更**: 新增 PrematchCommentClient struct，包含 5 個 HTTP API 方法
+    - `getCommentMeta(refId:)` - 獲取評論統計資訊
+    - `getComments(refId:mode:cursor:)` - 獲取評論列表
+    - `publishComment(refId:content:parentId:)` - 發送評論或回覆
+    - `toggleLike(commentId:)` - 切換 Like 狀態
+    - `getReplies(commentId:cursor:)` - 獲取回覆列表
+  - **設計**: 整合 `PrematchCommentAPI.PrematchCommentRepository`，支援依賴注入
+  - **測試**: ⚠️ 待補（Unit Test 和 Integration Test）
+  - **Commit**: `b40e7fec84`
+
+### 📝 文件更新
+
+- 更新實作狀態追蹤表（implementation_status.md）
+  - 標記 TDD-020 和 TDD-021 為已完成
+  - 更新完成度統計：2/26 tickets (7.7%)
+  - 更新 Client 層統計：2/3 已完成
+
+---
+
 ## 2025-01-XX
 
 ### 📝 初始化
@@ -66,10 +102,10 @@
 ## 統計
 
 ### 總變更數
-- **完成**: 0
+- **完成**: 2
 - **進行中**: 0
 - **Bug 修復**: 0
 - **重構**: 0
-- **文件更新**: 1
+- **文件更新**: 2
 - **問題發現**: 0
 

@@ -119,6 +119,24 @@ EOF
 
 echo "✅ 工作統整已生成: $SUMMARY_FILE"
 echo ""
+
+# 自動更新 mkdocs.yml
+echo "🔄 正在更新 mkdocs.yml..."
+if [ -f "$SCRIPT_DIR/scripts/update_mkdocs_nav.sh" ]; then
+    "$SCRIPT_DIR/scripts/update_mkdocs_nav.sh"
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo "✅ mkdocs.yml 已自動更新"
+    else
+        echo ""
+        echo "⚠️  mkdocs.yml 更新失敗，請手動執行："
+        echo "  ./scripts/update_mkdocs_nav.sh"
+    fi
+else
+    echo "⚠️  找不到 update_mkdocs_nav.sh 腳本，請手動更新 mkdocs.yml"
+fi
+
+echo ""
 echo "請手動填寫以下內容："
 echo "1. 完成項目（從工作日誌中提取）"
 echo "2. 與 Cursor 的對話統整"
@@ -129,4 +147,7 @@ echo "你可以使用以下命令開啟："
 echo "  open $SUMMARY_FILE"
 echo "  或"
 echo "  code $SUMMARY_FILE"
+echo ""
+echo "📝 下一步：部署到 GitHub Pages"
+echo "  python3 -m mkdocs gh-deploy"
 
