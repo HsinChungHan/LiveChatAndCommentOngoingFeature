@@ -150,6 +150,8 @@ nav:
     - 13_Implementation_Status/README.md
     - 13_Implementation_Status/implementation_status.md
     - 13_Implementation_Status/TDD-022_ChatWebSocketClient_Consistency_Check.md
+    - 13_Implementation_Status/tdd_consistency_check_2025-12-04.md
+    - 13_Implementation_Status/tdd_updates_2025-12-04.md
   - Changelog:
     - 14_Changelog/README.md
     - 14_Changelog/CHANGELOG.md
@@ -161,6 +163,7 @@ nav:
     - 15_Daily_Logs/2025-12-01.md
     - 15_Daily_Logs/2025-12-02.md
     - 15_Daily_Logs/2025-12-03.md
+    - 15_Daily_Logs/2025-12-04.md
 
   - Cursor Workflow:
     - 16_Cursor_Workflow/README.md
@@ -179,3 +182,4 @@ nav:
       - 16_Cursor_Workflow/daily_summaries/2025-12-02_daily_end.md
       - 16_Cursor_Workflow/daily_summaries/2025-12-03.md
       - 16_Cursor_Workflow/daily_summaries/2025-12-03_daily_end.md
+      - 16_Cursor_Workflow/daily_summaries/2025-12-04.md
