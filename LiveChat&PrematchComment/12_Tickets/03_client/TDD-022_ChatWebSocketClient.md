@@ -206,9 +206,24 @@ public actor ChatWebSocketClient {
     
     // MARK: - Initialization
     
-    public init(userId: String, domain: String) {
+    public init(userId: String, domain: String, appVersion: String? = nil, deviceId: String? = nil) {
         self.userId = userId
         self.domain = domain
+        var headers: [String: String] = [
+            "Platform": "ios",
+            "userId": userId
+        ]
+        
+        // 如果提供了 appVersion 和 deviceId，則加入 headers
+        // 否則由調用者負責在外部設定這些 headers
+        if let appVersion = appVersion {
+            headers["App-Version"] = appVersion
+        }
+        if let deviceId = deviceId {
+            headers["Device-Id"] = deviceId
+        }
+        
+        self.webSocketRequestHeaders = headers
     }
     
     // MARK: - Connection Management
@@ -228,9 +243,15 @@ public actor ChatWebSocketClient {
     
     // MARK: - Subscription Management
     
-    public func subscribe(chatroomId: String) -> AsyncStream<ChatAPI.WebSocketMessageDTO> {
-        // 1. 檢查是否已訂閱
-        // 2. 如果未訂閱，建立新訂閱（使用 SportyStomp.subscribe）
+    /// 訂閱指定聊天室的訊息流
+    /// - Parameter chatroomId: 聊天室 ID
+    /// - Returns: AsyncStream<ChatAPI.WebSocketMessageDTO> 訊息流
+    /// 
+    /// **時機**: 加入聊天室時呼叫（參考 Module Sequence Diagram）
+    /// **設計**: 使用 nonisolated 允許同步創建 AsyncStream，實際訂閱邏輯在 actor 內執行
+    public nonisolated func subscribe(chatroomId: String) -> AsyncStream<ChatAPI.WebSocketMessageDTO> {
+        // 1. 同步創建 AsyncStream
+        // 2. 在 Task 中執行 actor-isolated 的訂閱邏輯
         // 3. 返回 AsyncStream
     }
     
@@ -298,6 +319,7 @@ extension ChatWebSocketClient: SwiftStompDelegate {
 - 實作連線、斷線、發送、訂閱等方法 / Implement connect, disconnect, send, subscribe methods
 - 使用 `AsyncStream` 提供訊息流，而非 callback / Use `AsyncStream` for message flow, not callback
 - 使用 `ChatroomSubscription` 管理多訂閱者 / Use `ChatroomSubscription` to manage multiple subscribers
+- `subscribe` 方法標記為 `nonisolated` 以允許同步創建 AsyncStream / `subscribe` method marked as `nonisolated` to allow synchronous AsyncStream creation
 
 ### 關鍵設計要點 / Key Design Points
 

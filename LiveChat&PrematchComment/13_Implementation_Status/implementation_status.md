@@ -3,10 +3,10 @@
 ## 總覽
 
 - **開始日期**: 2025-12-01
-- **最後更新**: 2025-12-02
-- **完成度**: 2/26 tickets (7.7%)
-- **進行中**: 0 tickets
-- **待開始**: 24 tickets
+- **最後更新**: 2025-12-04
+- **完成度**: 3/26 tickets (11.5%)
+- **進行中**: 1 tickets (Data Layer 重構)
+- **待開始**: 22 tickets
 
 ## Ticket 實作狀態
 
@@ -22,7 +22,7 @@
 | TDD-011 | ChatAPI | ⏳ Pending | - | - | - |
 | TDD-020 | PrematchCommentClient | ✅ Completed | 2025-12-02 | `MatchChat/Sources/MatchChat/Services/API/PrematchCommentClient.swift` | 實作完成，測試待補 |
 | TDD-021 | LiveChatClient | ✅ Completed | 2025-12-02 | `MatchChat/Sources/MatchChat/Services/API/LiveChatClient.swift` | 實作完成，測試待補 |
-| TDD-022 | ChatWebSocketClient | ⏳ Pending | - | - | - |
+| TDD-022 | ChatWebSocketClient | ✅ Completed (95%) | 2025-12-03 | `MatchChat/Sources/MatchChat/Services/API/ChatWebSocketClient.swift` | 實作完成，單元測試待補 |
 | TDD-030 | PrematchCommentRepository | ⏳ Pending | - | - | - |
 | TDD-031 | LiveChatRepository | ⏳ Pending | - | - | - |
 | TDD-040 | ReloadCommentListUseCase | ⏳ Pending | - | - | - |
@@ -47,7 +47,7 @@
 |------|------|--------|--------|--------|
 | Domain Model | 6 | 0 | 0 | 6 |
 | API | 2 | 0 | 0 | 2 |
-| Client | 3 | 2 | 0 | 1 |
+| Client | 3 | 3 | 0 | 0 |
 | Repository | 2 | 0 | 0 | 2 |
 | UseCase | 9 | 0 | 0 | 9 |
 | Feature | 2 | 0 | 0 | 2 |
@@ -59,8 +59,8 @@
 | Feature | 總數 | 已完成 | 進行中 | 待開始 |
 |---------|------|--------|--------|--------|
 | PrematchComment | 14 | 1 | 0 | 13 |
-| LiveChat | 12 | 1 | 0 | 11 |
-| **總計** | **26** | **2** | **0** | **24** |
+| LiveChat | 12 | 2 | 0 | 10 |
+| **總計** | **26** | **3** | **0** | **23** |
 
 ## 更新記錄
 
@@ -68,4 +68,6 @@
 |------|---------|--------|
 | 2025-12-01 | 初始化實作狀態追蹤表 | - |
 | 2025-12-02 | 完成 TDD-020 (PrematchCommentClient) 和 TDD-021 (LiveChatClient) 實作 | - |
+| 2025-12-03 | 完成 TDD-022 (ChatWebSocketClient) 實作（95%），修復 SportyStomp API 調用錯誤和並發警告 | - |
+| 2025-12-04 | Data Layer 重構：Sendable 類型包裝、WebSocket 併發改進、Xcode 配置更新 | - |
 

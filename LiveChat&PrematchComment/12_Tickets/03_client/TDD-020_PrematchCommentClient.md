@@ -74,7 +74,8 @@ public struct PrematchCommentClient {
     }
     
     /// 發佈評論
-    public func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: AnyCodable]?, tagUserId: String?) async throws -> PrematchCommentAPI.CommentDTO {
+    /// - Note: sharedBetsMeta 使用 SharedBetsMetadata 包裝以符合 Sendable 協議
+    public func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: SharedBetsMetadata?, tagUserId: String?) async throws -> PrematchCommentAPI.CommentDTO {
         return try await apiRepository.publishComment(refId: refId, content: content, parentId: parentId, sharedBetsMeta: sharedBetsMeta, tagUserId: tagUserId)
     }
     
@@ -91,6 +92,7 @@ public struct PrematchCommentClient {
 - 內部使用 `PrematchCommentAPI.PrematchCommentRepository` / Internally uses `PrematchCommentAPI.PrematchCommentRepository`
 - 方法直接委派給 Repository / Methods delegate directly to Repository
 - 使用 `public` 修飾符 / Use `public` modifier
+- `sharedBetsMeta` 使用 `SharedBetsMetadata` 包裝型別以符合 Sendable 協議 / `sharedBetsMeta` uses `SharedBetsMetadata` wrapper type for Sendable compliance
 
 ## 驗收條件 / Acceptance Criteria
 

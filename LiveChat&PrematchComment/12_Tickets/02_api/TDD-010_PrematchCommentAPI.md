@@ -74,7 +74,7 @@ extension PrematchCommentAPI {
         case getCommentsByPopular(refId: String, pageNum: Int?, pageSize: Int?)
         case getCommentsByNewest(refId: String, prevCommentId: Int64?, pageSize: Int?)
         case getReplies(parentCommentId: Int64, prevCommentId: Int64?, pageSize: Int?)
-        case publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: AnyCodable]?, tagUserId: String?)
+        case publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: Any]?, tagUserId: String?)
         case toggleLike(commentId: Int64)
         
         public var baseURL: String {
@@ -230,7 +230,7 @@ extension PrematchCommentAPI {
     public struct PublishCommentRequestDTO: Encodable, Sendable {
         public let refId: String
         public let parentCommentId: Int64?  // 可選，父評論 ID（如果是回覆）
-        public let sharedBetsMeta: [String: AnyCodable]?  // 可選，共享投注資訊（自訂 JSON 格式）
+        public let sharedBetsMeta: [String: Any]?  // 可選，共享投注資訊（自訂 JSON 格式）- API 層使用原始字典
         public let comment: String
         public let tagUserId: String?  // 可選，被標記的用戶 ID
     }
@@ -282,6 +282,16 @@ extension PrematchCommentAPI {
 ```swift
 import Foundation
 
+/// Sendable wrapper for shared bets metadata
+/// Client 層使用此包裝型別以符合 Sendable 協議
+public struct SharedBetsMetadata: @unchecked Sendable {
+    public let value: [String: Any]
+    
+    public init(_ value: [String: Any]) {
+        self.value = value
+    }
+}
+
 extension PrematchCommentAPI {
     protocol PrematchCommentRepositoryProtocol {
         func getBatchCommentInfo(refIdList: [String]) async throws -> [CommentMetaInfoDTO]
@@ -289,11 +299,16 @@ extension PrematchCommentAPI {
         func getCommentsByPopular(refId: String, pageNum: Int?, pageSize: Int?) async throws -> [CommentDTO]
         func getCommentsByNewest(refId: String, prevCommentId: Int64?, pageSize: Int?) async throws -> [CommentDTO]
         func getReplies(parentCommentId: Int64, prevCommentId: Int64?, pageSize: Int?) async throws -> [CommentDTO]
-        func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: AnyCodable]?, tagUserId: String?) async throws -> CommentDTO
+        func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: SharedBetsMetadata?, tagUserId: String?) async throws -> CommentDTO
         func toggleLike(commentId: Int64) async throws -> CommentDTO?
     }
 }
 ```
+
+**設計說明**:
+- `SharedBetsMetadata`: 包裝 `[String: Any]` 以符合 Swift Concurrency 的 Sendable 要求
+- Repository Protocol 使用 `SharedBetsMetadata` 接收參數
+- Repository 實作中將 `SharedBetsMetadata` 解包成 `[String: Any]` 傳給 Endpoint
 
 #### PrematchCommentAPI+Repository.swift
 ```swift
@@ -338,8 +353,10 @@ extension PrematchCommentAPI {
             return response.data
         }
         
-        public func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: [String: AnyCodable]?, tagUserId: String?) async throws -> CommentDTO {
-            let endpoint = PrematchCommentEndpoint.publishComment(refId: refId, content: content, parentId: parentId, sharedBetsMeta: sharedBetsMeta, tagUserId: tagUserId)
+        public func publishComment(refId: String, content: String, parentId: Int64?, sharedBetsMeta: SharedBetsMetadata?, tagUserId: String?) async throws -> CommentDTO {
+            // 將 SharedBetsMetadata 解包成 [String: Any] 傳給 Endpoint
+            let metaDict: [String: Any]? = sharedBetsMeta?.value
+            let endpoint = PrematchCommentEndpoint.publishComment(refId: refId, content: content, parentId: parentId, sharedBetsMeta: metaDict, tagUserId: tagUserId)
             let response: CommentResponseDTO = try await apiClient.request(endpoint)
             return response.data
         }
@@ -360,6 +377,7 @@ extension PrematchCommentAPI {
 - API Models 使用 `XXXDTO` 命名，實作 `Decodable`、`Sendable` / API Models use `XXXDTO` naming, implement `Decodable`, `Sendable`
 - Repository 使用 `actor`，實作 `PrematchCommentRepositoryProtocol` / Repository uses `actor`, implements `PrematchCommentRepositoryProtocol`
 - 使用 extension 分離關注點 / Use extension to separate concerns
+- `SharedBetsMetadata` 包裝型別用於符合 Sendable 協議，在 Repository 層解包 / `SharedBetsMetadata` wrapper type for Sendable compliance, unwrapped at Repository layer
 
 ## 驗收條件 / Acceptance Criteria
 
